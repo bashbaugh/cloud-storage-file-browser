@@ -26,13 +26,25 @@ const FileExplorer = () => {
       <List divided relaxed>
         <FileCard
           cardType='list'
-          name='hello'
-          size='2MB'
-          fileType='png'
-          url='https://google.com'
+          name='img'
+          isFolder='true'
+          size='98MB'
           lastMod='Sunday'
         />
       </List>
+      <FileCard
+        name='hello.txt'
+        size='2MB'
+        fileType='png'
+        url='https://google.com'
+        lastMod='Sunday'
+      />
+      <FileCard
+        name='img'
+        isFolder='true'
+        size='98MB'
+        lastMod='Sunday'
+      />
     </div>
   )
 }

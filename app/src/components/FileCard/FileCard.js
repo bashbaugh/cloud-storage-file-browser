@@ -29,7 +29,26 @@ const fileCard = ({ cardType, isFolder, name, size, fileType, url, lastMod, onDe
     return (
       <Card>
         <Card.Content>
-
+          <Card.Header><a href={url || '#'} target='_blank'>{name}</a></Card.Header>
+          <Card.Meta>
+            {size} {isFolder ? 'folder' : fileType + ' file'}
+          </Card.Meta>
+          <Card.Description>
+            <Icon name={isFolder ? 'folder' : 'file'}/>
+            {isFolder ? '' : 'last modified ' + lastMod}
+          </Card.Description>
+        </Card.Content>
+        <Card.Content extra>
+          <Button.Group fluid>
+            <Button basic compact size='mini' color='purple' onClick={onRename}>
+              <Icon name='edit outline'/>
+              Rename
+            </Button>
+            <Button basic compact size='mini' color='red' onClick={onDelete}>
+              <Icon name='trash alternate outline'/>
+              Delete
+            </Button>
+          </Button.Group>
         </Card.Content>
       </Card>
     )
