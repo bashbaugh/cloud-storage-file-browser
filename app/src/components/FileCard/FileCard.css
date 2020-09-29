@@ -1,0 +1,11 @@
+.file-list-card {
+    width: 100%;
+}
+
+.file-dropdown-link {
+    color: #ff6600;
+}
+
+.file-dropdown-link:hover {
+    color: #ffaa00;
+}
