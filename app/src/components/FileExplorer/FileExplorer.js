@@ -1,6 +1,5 @@
 import React from 'react'
 import { Header, Segment, Icon, Breadcrumb, List, Card } from 'semantic-ui-react'
-import FileCard from '../FileCard/FileCard'
 
 const FileExplorer = () => {
   let currentPath = []
@@ -23,28 +22,7 @@ const FileExplorer = () => {
           ))
         }
       </Breadcrumb>
-      <List divided relaxed>
-        <FileCard
-          cardType='list'
-          name='img'
-          isFolder='true'
-          size='98MB'
-          lastMod='Sunday'
-        />
-      </List>
-      <FileCard
-        name='hello.txt'
-        size='2MB'
-        fileType='png'
-        url='https://google.com'
-        lastMod='Sunday'
-      />
-      <FileCard
-        name='img'
-        isFolder='true'
-        size='98MB'
-        lastMod='Sunday'
-      />
+      
     </div>
   )
 }

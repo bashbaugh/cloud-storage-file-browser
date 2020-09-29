@@ -3,7 +3,7 @@ import './FileCard.css'
 import { Card, List, Button, Icon, Dropdown } from 'semantic-ui-react'
 
 const fileCard = ({ cardType, isFolder, name, size, fileType, url, lastMod, onDelete, onRename}) => {
-  if (cardType === 'list') {
+  if (cardType === 'list') { // File card for list view
     return (
       <List.Item>
         <List.Icon name={isFolder ? 'folder' : 'file'} size='large' verticalAlign='middle'/>
@@ -25,7 +25,7 @@ const fileCard = ({ cardType, isFolder, name, size, fileType, url, lastMod, onDe
         </List.Content>
       </List.Item>
     )
-  } else {
+  } else { // File card for card view
     return (
       <Card>
         <Card.Content>
