@@ -1,10 +1,14 @@
 import React from 'react'
 import './FileExplorer.css'
-import { Header, Segment, Icon, Breadcrumb, List, Card } from 'semantic-ui-react'
+import { Header, Segment, Icon, Breadcrumb, List, Card, Button } from 'semantic-ui-react'
+
+
 
 const FileExplorer = () => {
-  let currentPath = []
-  let refreshing
+  const [state, setState] = React.useState({
+    currentPath: [],
+    refreshing: false
+  })
 
   return (
     <div>
@@ -12,19 +16,21 @@ const FileExplorer = () => {
         <u>Files</u>
       </Header>
       <div className='buttons'>
-        <Button basic color='green' size='mini'>
-          <Icon name='refresh' loading={refreshing}/>
-          { refreshing ? 'Loading...' : 'Refresh'}
+        <Button basic color='green' size='mini' onClick={(e) => {
+          setState({ ...state, refreshing: true })
+        }}>
+          <Icon name='refresh' loading={state.refreshing}/>
+          { state.refreshing ? 'Loading...' : 'Refresh'}
         </Button>
       </div>
       <Breadcrumb>
         <Icon name='folder open outline'/>
-        <Breadcrumb.Section link active={!currentPath.length}>Objects</Breadcrumb.Section>
+        <Breadcrumb.Section link active={!state.currentPath.length}>Objects</Breadcrumb.Section>
         <Breadcrumb.Divider />
         {
-          currentPath.map((folderName, folderDepth) => (
+          state.currentPath.map((folderName, folderDepth) => (
             <span>
-              <Breadcrumb.Section link active={currentPath.length === folderDepth+1}>{folderName}</Breadcrumb.Section>
+              <Breadcrumb.Section link active={state.currentPath.length === folderDepth+1}>{folderName}</Breadcrumb.Section>
               <Breadcrumb.Divider />
             </span>
           ))
