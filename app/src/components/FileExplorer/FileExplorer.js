@@ -1,6 +1,6 @@
 import React from 'react'
-import { Header, Segment, Icon, Breadcrumb, Button } from 'semantic-ui-react'
 import './FileExplorer.css'
+import { Header, Segment, Icon, Breadcrumb, List, Card } from 'semantic-ui-react'
 
 const FileExplorer = () => {
   let currentPath = []
@@ -30,6 +30,7 @@ const FileExplorer = () => {
           ))
         }
       </Breadcrumb>
+      
     </div>
   )
 }
