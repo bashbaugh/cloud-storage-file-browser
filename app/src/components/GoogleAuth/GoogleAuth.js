@@ -1,23 +1,59 @@
-import { useState, useEffect } from 'react'
-import { GoogleLogin, useGoogleLogout } from 'react-google-login'
+import React, { useState, useEffect } from 'react'
 import { Header, Icon, Modal, Button, Message } from 'semantic-ui-react'
 import config from '../../config'
 
 
 const GoogleAuth = ({ setAccessToken, setProfile }) => {
-  const [ open, setOpen ] = useState(true)
-  const [ signingIn, setSigningIn ] = useState(true)
-  const [ error, setError ] = useState(false)
+  const [ open, setOpen ] = useState(true) // Is the sign in modal open
+  const [ signingIn, setSigningIn ] = useState(true) // Is the user in the process of signing in
+  const [ error, setError ] = useState(false) // Has there been a sign in error
 
-  let auth2
+  const SCOPES = 'profile email'
+  // let gauth // Google Auth Object
+
+  const onSuccess = (isSignedIn) => {
+    let user = window.gauth.currentUser.get()
+    let profile = user.getBasicProfile()
+    let tokenObj = user.getAuthResponse(true) // Get auth tokens including access token
+    if (isSignedIn && user.hasGrantedScopes(SCOPES) && tokenObj) {
+      setAccessToken(tokenObj.access_token)
+      setProfile({
+        name: profile.getName(),
+        imageUrl: profile.getImageUrl(),
+        email: profile.getEmail()
+      })
+      setOpen(false)
+    }
+  }
 
   useEffect(() => {
     window.gapi.load('auth2', () => {
-      auth2 = gapi.auth2.init({
-        client_id: config.googleClientId,
+      window.gapi.auth2.init({
+        'client_id': config.googleClientId,
+        'scope': SCOPES,
+        'ux_mode': 'redirect'
+      }).then((auth2) => {
+        window.gauth = auth2
+        window.gauth.isSignedIn.listen(onSuccess)
+        onSuccess(true)
+
+        setSigningIn(false)
+        console.log("HEYYY")
+        console.log(window.gauth)
       })
     })
-  })
+  }, [])
+
+  const signIn = () => {
+    window.gauth.signIn()
+      .then(() => {
+        onSuccess(true)
+      })
+      .catch((err) => {
+        console.error(err)
+        setError(true)
+      })
+  }
 
   return (
     <Modal
@@ -31,9 +67,9 @@ const GoogleAuth = ({ setAccessToken, setProfile }) => {
         { error ? 'Something went wrong' : 'Sign In'}
       </Header>
       <Modal.Content>
-        <Button style={{display: 'block', margin: '0 auto'}} primary disabled={props.disabled} onClick={() => {
+        <Button style={{display: 'block', margin: '0 auto'}} primary disabled={signingIn} onClick={() => {
           setSigningIn(true)
-          //
+          signIn()
         }}>Sign In with Google</Button>
       </Modal.Content>
     </Modal>

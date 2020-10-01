@@ -1,22 +1,16 @@
 import React from 'react'
 import { Header, Icon, Menu, Sidebar, Segment, Image } from 'semantic-ui-react'
-import {useGoogleLogout, UseGoogleLogout} from 'react-google-login'
 import config from '../../config'
 
 export default ({ profile }) => {
-  const onFailure = (res) => {
-    alert("Unable to log out. Please clear your cache and cookies to ensure that you're signed out.")
-  }
 
-  const onLogoutSuccess = (res) => {
+  let gauth
+
+  const signOut = () => {
+    window.gapi.auth2.getAuthInstance().signOut()
+    localStorage.clear()
     window.location.reload()
   }
-
-  const { signOut, loaded } = useGoogleLogout({
-    clientId: config.googleClientId,
-    onFailure,
-    onLogoutSuccess
-  })
 
   return (
     <Sidebar
