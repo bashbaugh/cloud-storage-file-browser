@@ -1,39 +1,22 @@
-import React, { useState } from 'react'
-import {useGoogleLogin, UseGoogleLogin} from 'react-google-login'
+import { useState, useEffect } from 'react'
+import { GoogleLogin, useGoogleLogout } from 'react-google-login'
 import { Header, Icon, Modal, Button, Message } from 'semantic-ui-react'
 import config from '../../config'
 
-const DEV_MODE = process.env.GOOGLE_AUTH_TOKEN
 
-export default ({ setAccessToken, setProfile }) => {
+const GoogleAuth = ({ setAccessToken, setProfile }) => {
   const [ open, setOpen ] = useState(true)
   const [ signingIn, setSigningIn ] = useState(true)
   const [ error, setError ] = useState(false)
 
-  // If a dev auth token is present, don't actually sign in with google OAuth.
-  const DEV_MODE = process.env.GOOGLE_AUTH_TOKEN
+  let auth2
 
-  const onSuccess = (res) => {
-    setAccessToken(res.accessToken)
-    setProfile(res.profileObj)
-    setOpen(false)
-  }
-
-  const onFailure = (res) => {
-    setError(true)
-    console.log(res)
-  }
-
-  const { signIn, loaded } = useGoogleLogin({
-    onSuccess,
-    onFailure,
-    clientId: config.googleClientId,
-    scope: 'profile email',
-    // uxMode: 'redirect',
-    isSignedIn: true,
-    onAutoLoadFinished: () => {
-      setSigningIn(false)
-    }
+  useEffect(() => {
+    window.gapi.load('auth2', () => {
+      auth2 = gapi.auth2.init({
+        client_id: config.googleClientId,
+      })
+    })
   })
 
   return (
@@ -48,11 +31,13 @@ export default ({ setAccessToken, setProfile }) => {
         { error ? 'Something went wrong' : 'Sign In'}
       </Header>
       <Modal.Content>
-        <Button style={{display: 'block', margin: '0 auto'}} primary onClick={() => {
+        <Button style={{display: 'block', margin: '0 auto'}} primary disabled={props.disabled} onClick={() => {
           setSigningIn(true)
-          signIn()
+          //
         }}>Sign In with Google</Button>
       </Modal.Content>
     </Modal>
   )
 }
+
+export default GoogleAuth

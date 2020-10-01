@@ -18,11 +18,16 @@ exports.manageStorage = (req, res) => {
   res.send('Hey')
 };
 
-exports.fetchFiles = (req, res) => {
+exports.getFiles = (req, res) => {
   setCors(req, res)
 
   bucket.getFiles()
     .then((files) => {
-      res.send(files)
+      const response = files.map((file) => file.metadata)
+      res.json(response)
+    })
+    .catch((err) => {
+      console.error(new Error(err))
+      return res.status(500).send("Unable to get files")
     })
 }

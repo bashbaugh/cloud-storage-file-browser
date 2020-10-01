@@ -2,5 +2,5 @@
 
 export default {
   googleOauthToken: '',
-  bucketName: ''
+  APIEndpoint: 'https://region-projectname.cloudfunctions.net'
 }

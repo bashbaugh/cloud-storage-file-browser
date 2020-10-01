@@ -16,7 +16,7 @@ function App() {
       </nav>
       <Auth setAccessToken={setAccessToken} setProfile={setProfile}/>
       <section className='app-content'>
-        <FileExplorer/>
+        <FileExplorer accessToken={accessToken} profile={profile}/>
       </section>
     </div>
   );

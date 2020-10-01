@@ -1,5 +1,5 @@
 import React from 'react'
-import { Header, Icon, Menu, Sidebar, Segment } from 'semantic-ui-react'
+import { Header, Icon, Menu, Sidebar, Segment, Image } from 'semantic-ui-react'
 import {useGoogleLogout, UseGoogleLogout} from 'react-google-login'
 import config from '../../config'
 
@@ -28,7 +28,7 @@ export default ({ profile }) => {
       width='thin'
     >
       <Header as='h4' color='grey' style={{ margin: '10px auto' }}>CDN File Manager</Header>
-      <p style={{color: 'grey'}}>{profile.email}</p>
+      <Image src={profile.imageUrl} avatar/>
       <Menu.Item as='a'>
         <Icon name='folder' />
         Files
