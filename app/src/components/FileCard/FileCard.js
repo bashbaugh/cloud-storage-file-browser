@@ -2,7 +2,7 @@ import React from 'react'
 import './FileCard.css'
 import { Card, List, Button, Icon, Dropdown } from 'semantic-ui-react'
 
-const fileCard = ({ cardType, isFolder, name, size, fileType, url, lastMod, onDelete, onRename}) => {
+const fileCard = ({ cardType, isFolder, name, size, fileType, url, lastMod, downloadLink, onDelete, onRename}) => {
   if (cardType === 'list') { // File card for list view
     return (
       <List.Item>
@@ -12,6 +12,8 @@ const fileCard = ({ cardType, isFolder, name, size, fileType, url, lastMod, onDe
             <Dropdown>
               <Dropdown.Menu>
                 {/*<Dropdown.Item icon='cloud download' text='Download' />*/}
+                <Dropdown.Item icon='download' text='Download' onClick={() => window.open(downloadLink, '_blank')} />
+                <Dropdown.Divider/>
                 <Dropdown.Item icon='edit' text='Rename' onClick={onRename} />
                 <Dropdown.Item icon='trash' text='Delete' onClick={onDelete} />
               </Dropdown.Menu>
@@ -19,7 +21,7 @@ const fileCard = ({ cardType, isFolder, name, size, fileType, url, lastMod, onDe
           </List.Header>
           <List.Description>
             {size} &middot;&nbsp;
-            {isFolder ? 'folder' : fileType + ' file'} &middot;&nbsp;
+            {isFolder ? 'folder' : fileType} &middot;&nbsp;
             {isFolder ? '' : 'last modified ' + lastMod}
           </List.Description>
         </List.Content>
@@ -31,7 +33,7 @@ const fileCard = ({ cardType, isFolder, name, size, fileType, url, lastMod, onDe
         <Card.Content>
           <Card.Header><a href={url || '#'} target='_blank'>{name}</a></Card.Header>
           <Card.Meta>
-            {size} {isFolder ? 'folder' : fileType + ' file'}
+            {size} {isFolder ? 'folder' : fileType}
           </Card.Meta>
           <Card.Description>
             <Icon name={isFolder ? 'folder' : 'file'}/>
@@ -40,13 +42,14 @@ const fileCard = ({ cardType, isFolder, name, size, fileType, url, lastMod, onDe
         </Card.Content>
         <Card.Content extra>
           <Button.Group fluid>
-            <Button basic compact size='mini' color='purple' onClick={onRename}>
+            <Button basic compact size='mini' color='green' onClick={() => window.open(downloadLink, '_blank')}>
+              <Icon name='download'/>
+            </Button>
+            <Button basic compact size='mini' color='blue' onClick={onRename}>
               <Icon name='edit outline'/>
-              Rename
             </Button>
             <Button basic compact size='mini' color='red' onClick={onDelete}>
               <Icon name='trash alternate outline'/>
-              Delete
             </Button>
           </Button.Group>
         </Card.Content>

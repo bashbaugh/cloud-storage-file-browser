@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import './FileExplorer.css'
 import { Header, Segment, Icon, Breadcrumb, List, Card, Button, Message } from 'semantic-ui-react'
+import FileCard from '../FileCard/FileCard'
+import { formatBytes } from '../../util/fileutil'
 import config from '../../config'
 
 const FileExplorer = ({ idToken, profile }) => {
@@ -36,6 +38,46 @@ const FileExplorer = ({ idToken, profile }) => {
     getFiles()
   }, [idToken])
 
+  const fileCards = () => {
+    if (view === 'list') {
+      return (
+        <List>
+          {files.map((file) => (
+            <FileCard
+              key={file.id}
+              cardType='list'
+              fileType={file.contentType}
+              isFolder={false}
+              lastMod={file.updated}
+              name={file.name}
+              size={formatBytes(file.size)}
+              url='/'
+              downloadLink={file.downloadLink}
+            />
+          ))}
+        </List>
+      )
+    } else {
+      return (
+        <Card.Group>
+          {files.map((file) => (
+            <FileCard
+              key={file.id}
+              cardType='grid'
+              fileType={file.contentType}
+              isFolder={false}
+              lastMod={file.updated}
+              name={file.name}
+              size={formatBytes(file.size)}
+              url='/'
+              downloadLink={file.downloadLink}
+            />
+          ))}
+        </Card.Group>
+      )
+    }
+  }
+
   return (
     <div>
       <Header as='h2'>
@@ -47,11 +89,11 @@ const FileExplorer = ({ idToken, profile }) => {
           Refresh
         </Button>
         <Button.Group size='tiny'>
-          <Button icon basic={view === 'list'} color='purple' onClick={() => setView('grid')}>
-            <Icon name='grid layout'/>
-          </Button>
           <Button icon basic={view === 'grid'} color='purple' onClick={() => setView('list')}>
             <Icon name='list layout'/>
+          </Button>
+          <Button icon basic={view === 'list'} color='purple' onClick={() => setView('grid')}>
+            <Icon name='grid layout'/>
           </Button>
         </Button.Group>
       </div>
@@ -80,9 +122,7 @@ const FileExplorer = ({ idToken, profile }) => {
           </Message>
         }
         { !files || !files.length || !files[0].name && !state.loading && <p>There are no files here :(</p>}
-        {files.map((file) => (
-          <div></div>
-        ))}
+        {fileCards()}
       </div>
       
     </div>
