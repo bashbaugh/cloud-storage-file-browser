@@ -3,7 +3,7 @@ import { Header, Icon, Modal, Button, Message } from 'semantic-ui-react'
 import config from '../../config'
 
 
-const GoogleAuth = ({ setAccessToken, setProfile }) => {
+const GoogleAuth = ({ setIdToken, setProfile }) => {
   const [ open, setOpen ] = useState(true) // Is the sign in modal open
   const [ signingIn, setSigningIn ] = useState(true) // Is the user in the process of signing in
   const [ error, setError ] = useState(false) // Has there been a sign in error
@@ -14,9 +14,9 @@ const GoogleAuth = ({ setAccessToken, setProfile }) => {
   const onSuccess = (isSignedIn) => {
     let user = window.gauth.currentUser.get()
     let profile = user.getBasicProfile()
-    let tokenObj = user.getAuthResponse(true) // Get auth tokens including access token
+    let tokenObj = user.getAuthResponse(false) // Get ID token
     if (isSignedIn && user.hasGrantedScopes(SCOPES) && tokenObj) {
-      setAccessToken(tokenObj.access_token)
+      setIdToken(tokenObj.id_token)
       setProfile({
         name: profile.getName(),
         imageUrl: profile.getImageUrl(),
@@ -38,8 +38,6 @@ const GoogleAuth = ({ setAccessToken, setProfile }) => {
         onSuccess(true)
 
         setSigningIn(false)
-        console.log("HEYYY")
-        console.log(window.gauth)
       })
     })
   }, [])

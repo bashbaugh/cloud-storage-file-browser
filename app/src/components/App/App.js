@@ -6,7 +6,7 @@ import FileExplorer from '../FileExplorer/FileExplorer'
 import Auth from '../GoogleAuth/GoogleAuth'
 
 function App() {
-  const [accessToken, setAccessToken] = useState('')
+  const [idToken, setIdToken] = useState('')
   const [profile, setProfile] = useState({})
 
   return (
@@ -14,9 +14,9 @@ function App() {
       <nav>
         <Sidebar profile={profile}/>
       </nav>
-      <Auth setAccessToken={setAccessToken} setProfile={setProfile}/>
+      <Auth setIdToken={setIdToken} setProfile={setProfile}/>
       <section className='app-content'>
-        <FileExplorer accessToken={accessToken} profile={profile}/>
+        <FileExplorer idToken={idToken} profile={profile}/>
       </section>
     </div>
   );

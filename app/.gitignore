@@ -12,7 +12,7 @@
 /build
 
 # app config
-/app/config.js
+/app/src/config.js
 
 # misc
 .DS_Store

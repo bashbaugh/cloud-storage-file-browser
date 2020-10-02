@@ -3,10 +3,9 @@ import './FileExplorer.css'
 import { Header, Segment, Icon, Breadcrumb, List, Card, Button, Message } from 'semantic-ui-react'
 import config from '../../config'
 
-const FileExplorer = ({ accessToken, profile }) => {
+const FileExplorer = ({ idToken, profile }) => {
   const [state, setState] = useState({
     currentPath: [],
-    refreshing: false,
     loading: false,
     loadingError: false
   })
@@ -14,20 +13,27 @@ const FileExplorer = ({ accessToken, profile }) => {
   const [view, setView] = useState('list')
 
   const getFiles = () => {
-    setState({...state, loadingError: false})
-    fetch(config.APIEndpoint + '/get-files')
+    setState({...state, loading: true, loadingError: false})
+    fetch(config.APIEndpoint + '/get-files', {
+      headers: new Headers({
+        'Authorization': `Bearer ${idToken}`
+      })
+    })
       .then(res => res.json())
-      .then(setFileMetadata)
-      .catch(() => setState({ ...state, loadingError: true }))
+      .then((data) => {
+        setFileMetadata(data)
+        setState({...state, loadingError: false, loading: false })
+      })
+      .catch(() => setState({ ...state, loading: true, loadingError: true }))
   }
 
   useEffect(() => {
-    // When accessToken is set, start loading files.
-    if (!accessToken || accessToken.length < 3) return
+    // When idToken is set, start loading files.
+    if (!idToken || idToken.length < 3) return
     setState({...state, loading: true})
 
     getFiles()
-  }, [accessToken])
+  }, [idToken])
 
   return (
     <div>
@@ -35,11 +41,9 @@ const FileExplorer = ({ accessToken, profile }) => {
         <u>Files</u>
       </Header>
       <div className='buttons'>
-        <Button basic color='green' size='tiny' onClick={(e) => {
-          setState({ ...state, refreshing: true })
-        }}>
+        <Button basic color='green' size='tiny' onClick={getFiles}>
           <Icon name='refresh' loading={state.refreshing}/>
-          { state.refreshing ? 'Loading...' : 'Refresh'}
+          Refresh
         </Button>
         <Button.Group size='tiny'>
           <Button icon basic={view === 'list'} color='purple' onClick={() => setView('grid')}>
@@ -65,11 +69,12 @@ const FileExplorer = ({ accessToken, profile }) => {
       </Breadcrumb>
 
       <div className='files'>
-        {state.loading || state.loadingError && <Message icon>
-          <Icon name='circle notched' loading />
+        {state.loading && <Message icon negative={state.loadingError}>
+          <Icon name={state.loadingError ? 'warning sign' : 'circle notched'} loading={!state.loadingError} />
           <Message.Content>
-          <Message.Header>Please wait...</Message.Header>
-          We are gathering your files.
+          <Message.Header>{ state.loadingError ? 'Something went wrong.' : 'Please wait...' }</Message.Header>
+          { state.loadingError ? 'Either the request failed or you are not authorized to access these files ' : 'We are gathering your files...' }
+          { state.loadingError && <a href='#' onClick={getFiles}>Try again.</a> }
           </Message.Content>
           </Message>
         }
