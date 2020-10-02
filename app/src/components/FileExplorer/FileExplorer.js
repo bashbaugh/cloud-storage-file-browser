@@ -7,9 +7,10 @@ const FileExplorer = ({ idToken, profile }) => {
   const [state, setState] = useState({
     currentPath: [],
     loading: false,
-    loadingError: false
+    loadingError: false,
+    bucketName: 'objects'
   })
-  const [fileMetadata, setFileMetadata] = useState([])
+  const [files, setFiles] = useState([])
   const [view, setView] = useState('list')
 
   const getFiles = () => {
@@ -21,8 +22,8 @@ const FileExplorer = ({ idToken, profile }) => {
     })
       .then(res => res.json())
       .then((data) => {
-        setFileMetadata(data)
-        setState({...state, loadingError: false, loading: false })
+        setFiles(data.files)
+        setState({...state, loadingError: false, loading: false, bucketName: data.bucket })
       })
       .catch(() => setState({ ...state, loading: true, loadingError: true }))
   }
@@ -56,7 +57,7 @@ const FileExplorer = ({ idToken, profile }) => {
       </div>
       <Breadcrumb>
         <Icon name='folder open outline'/>
-        <Breadcrumb.Section link active={!state.currentPath.length}>Objects</Breadcrumb.Section>
+        <Breadcrumb.Section link active={!state.currentPath.length}>{state.bucketName}</Breadcrumb.Section>
         <Breadcrumb.Divider />
         {
           state.currentPath.map((folderName, folderDepth) => (
@@ -73,11 +74,15 @@ const FileExplorer = ({ idToken, profile }) => {
           <Icon name={state.loadingError ? 'warning sign' : 'circle notched'} loading={!state.loadingError} />
           <Message.Content>
           <Message.Header>{ state.loadingError ? 'Something went wrong.' : 'Please wait...' }</Message.Header>
-          { state.loadingError ? 'Either the request failed or you are not authorized to access these files ' : 'We are gathering your files...' }
+          { state.loadingError ? 'Either the request failed or you are not authorized to access these files. ' : 'We are gathering your files...' }
           { state.loadingError && <a href='#' onClick={getFiles}>Try again.</a> }
           </Message.Content>
           </Message>
         }
+        { !files || !files.length || !files[0].name && !state.loading && <p>There are no files here :(</p>}
+        {files.map((file) => (
+          <div></div>
+        ))}
       </div>
       
     </div>

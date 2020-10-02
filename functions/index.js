@@ -23,8 +23,19 @@ exports.getFiles = (req, res) => {
 
   bucket.getFiles()
     .then((files) => {
-      const response = files.map((file) => file.metadata)
-      res.json(response)
+      const filesMetadata = files[0].map((file) => file.metadata)
+      const filesResponse = filesMetadata.map((file) => ({
+        cacheControl: file.cacheControl || '',
+        contentEncoding: file.contentEncoding || '',
+        contentType: file.contentType || '',
+        version: file.generation,
+        id: file.id,
+        downloadLink: file.mediaLink,
+        name: file.name,
+        size: file.size,
+        updated: file.updated
+      }))
+      res.json({ bucket: bucket.name, files: filesResponse })
     })
     .catch((err) => {
       console.error(new Error(err))
