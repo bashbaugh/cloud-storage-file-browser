@@ -14,10 +14,6 @@ function setCors(req, res) {
   }
 }
 
-exports.manageStorage = (req, res) => {
-  res.send('Hey')
-};
-
 exports.getFiles = (req, res) => {
   setCors(req, res)
 

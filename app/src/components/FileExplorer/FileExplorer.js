@@ -41,7 +41,7 @@ const FileExplorer = ({ idToken, profile }) => {
   const fileCards = () => {
     if (view === 'list') {
       return (
-        <List>
+        <List divided relaxed>
           {files.map((file) => (
             <FileCard
               key={file.id}

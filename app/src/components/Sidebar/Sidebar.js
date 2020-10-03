@@ -2,7 +2,7 @@ import React from 'react'
 import { Header, Icon, Menu, Sidebar, Segment, Image } from 'semantic-ui-react'
 import config from '../../config'
 
-export default ({ profile }) => {
+export default ({ profile, openFileUpload }) => {
 
   let gauth
 
@@ -27,7 +27,7 @@ export default ({ profile }) => {
         <Icon name='folder' />
         Files
       </Menu.Item>
-      <Menu.Item as='a'>
+      <Menu.Item as='a' onClick={openFileUpload}>
         <Icon name='cloud upload' />
         Upload File(s)
       </Menu.Item>
