@@ -2,10 +2,15 @@
     margin: 20px 0;
 }
 
-.buttons > div {
+.buttons > *:not(:first-child)  {
     margin-left: 5px !important;
 }
 
 .files {
     margin: 20px 0;
+}
+
+.up-button {
+    display: block;
+    margin: 10px 0;
 }

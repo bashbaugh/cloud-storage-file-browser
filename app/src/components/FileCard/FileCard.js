@@ -2,17 +2,17 @@ import React from 'react'
 import './FileCard.css'
 import { Card, List, Button, Icon, Dropdown } from 'semantic-ui-react'
 
-const fileCard = ({ cardType, isFolder, name, size, fileType, url, lastMod, downloadLink, onDelete, onRename}) => {
+const fileCard = ({ cardType, isFolder, name, size, fileType, url, lastMod, downloadLink, onDelete, onRename, onClickItem}) => {
   if (cardType === 'list') { // File card for list view
     return (
       <List.Item>
         <List.Icon name={isFolder ? 'folder' : 'file'} size='large' verticalAlign='middle'/>
         <List.Content>
-          <List.Header><a href={url || '#'} target='_blank'>{name}</a>
+          <List.Header><a href={url || '#'} onClick={onClickItem}>{name}</a>
             <Dropdown>
               <Dropdown.Menu>
                 {/*<Dropdown.Item icon='cloud download' text='Download' />*/}
-                <Dropdown.Item icon='download' text='Download' onClick={() => window.open(downloadLink, '_blank')} />
+                <Dropdown.Item icon='download' text='Download' disabled={isFolder} onClick={() => window.open(downloadLink, '_blank')} />
                 <Dropdown.Divider/>
                 <Dropdown.Item icon='edit' text='Rename' onClick={onRename} />
                 <Dropdown.Item icon='trash' text='Delete' onClick={onDelete} />
@@ -20,9 +20,9 @@ const fileCard = ({ cardType, isFolder, name, size, fileType, url, lastMod, down
             </Dropdown>
           </List.Header>
           <List.Description>
-            {size} &middot;&nbsp;
-            {isFolder ? 'folder' : fileType} &middot;&nbsp;
-            {isFolder ? '' : 'last modified ' + lastMod}
+            {!isFolder && size}
+            {isFolder ? 'folder' : ` \u00B7 ${fileType} `}
+            {!isFolder && ` \u00B7 last modified ${lastMod} `}
           </List.Description>
         </List.Content>
       </List.Item>
@@ -31,20 +31,21 @@ const fileCard = ({ cardType, isFolder, name, size, fileType, url, lastMod, down
     return (
       <Card>
         <Card.Content>
-          <Card.Header><a href={url || '#'} target='_blank'>{name}</a></Card.Header>
+          <Card.Header><a href={url || '#'} onClick={onClickItem}>{name}</a></Card.Header>
           <Card.Meta>
-            {size} {isFolder ? 'folder' : fileType}
+            {!isFolder && size}
+            {isFolder ? 'folder' : ` \u00B7 ${fileType} `}
           </Card.Meta>
           <Card.Description>
             <Icon name={isFolder ? 'folder' : 'file'}/>
-            {isFolder ? '' : 'last modified ' + lastMod}
+            {!isFolder && ` \u00B7 last modified ${lastMod} `}
           </Card.Description>
         </Card.Content>
         <Card.Content extra>
           <Button.Group fluid>
-            <Button basic compact size='mini' color='green' onClick={() => window.open(downloadLink, '_blank')}>
+            { !isFolder && <Button basic compact size='mini' color='green' onClick={() => window.open(downloadLink, '_blank')}>
               <Icon name='download'/>
-            </Button>
+            </Button>}
             <Button basic compact size='mini' color='blue' onClick={onRename}>
               <Icon name='edit outline'/>
             </Button>
