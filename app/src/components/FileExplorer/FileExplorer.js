@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import './FileExplorer.css'
 import { Header, Segment, Icon, Breadcrumb, List, Card, Button, Message } from 'semantic-ui-react'
 import FileCard from '../FileCard/FileCard'
-import { formatBytes } from '../../util/fileutil'
+import { formatBytes, formatDatetime } from '../../util/fileutil'
 import api from '../../api/storage'
 
 const FileExplorer = ({ idToken, profile }) => {
@@ -48,7 +48,7 @@ const FileExplorer = ({ idToken, profile }) => {
           cardType={view}
           fileType={file.contentType}
           isFolder={file.isFolder}
-          lastMod={file.updated}
+          lastMod={formatDatetime(file.updated)}
           name={file.name}
           size={formatBytes(file.size)}
           downloadLink={file.downloadLink}
