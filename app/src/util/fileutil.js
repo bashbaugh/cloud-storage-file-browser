@@ -14,6 +14,7 @@ export function formatBytes(bytes, decimals = 2) {
 }
 
 export function formatDatetime(date) {
+  // https://stackoverflow.com/a/54187918/8748307
   const tzOffsetMs = new Date().getTimezoneOffset() * 60 * 1000 // Get local timezone offset
   const localDatetime = new Date(new Date(date) - tzOffsetMs) // Subtract tz offset from datetime to get local datetime
   return localDatetime.toISOString().slice(0, 19).replace(/-/g, "/").replace("T", " at ") // ISO format and return local datetime
