@@ -5,6 +5,7 @@ import Sidebar from '../Sidebar/Sidebar'
 import FileExplorer from '../FileExplorer/FileExplorer'
 import Auth from '../GoogleAuth/GoogleAuth'
 import FileUploadModal from '../FileUploadModal/FileUploadModal'
+import api from '../../api/storage'
 
 function App() {
   const [idToken, setIdToken] = useState('')
@@ -17,7 +18,10 @@ function App() {
       <nav>
         <Sidebar profile={profile} openFileUpload={() => setFileUploadOpen(true)}/>
       </nav>
-      <Auth setIdToken={setIdToken} setProfile={setProfile}/>
+      <Auth setIdToken={(t) => {
+        api.idToken = t
+        setIdToken(t)
+      }} setProfile={setProfile}/>
       <section className='app-content'>
         <FileExplorer idToken={idToken} profile={profile}/>
       </section>

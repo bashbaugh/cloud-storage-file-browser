@@ -2,7 +2,7 @@
   "name": "functions",
   "version": "0.1.0",
   "description": "Functions for the web app",
-  "main": "index.js",
+  "main": "getFiles.js",
   "author": "Benjamin Ashbaugh",
   "license": "MIT",
   "scripts": {

@@ -3,7 +3,7 @@ import './FileExplorer.css'
 import { Header, Segment, Icon, Breadcrumb, List, Card, Button, Message } from 'semantic-ui-react'
 import FileCard from '../FileCard/FileCard'
 import { formatBytes } from '../../util/fileutil'
-import config from '../../config'
+import api from '../../api/storage'
 
 const FileExplorer = ({ idToken, profile }) => {
   const [state, setState] = useState({
@@ -17,13 +17,8 @@ const FileExplorer = ({ idToken, profile }) => {
 
   const getFiles = () => {
     setState({...state, loading: true, loadingError: false})
-    fetch(config.APIEndpoint + '/get-files', {
-      headers: new Headers({
-        'Authorization': `Bearer ${idToken}`
-      })
-    })
-      .then(res => res.json())
-      .then((data) => {
+    api.getFiles()
+      .then(({ data }) => {
         setFiles(data.files)
         setState({...state, loadingError: false, loading: false, bucketName: data.bucket })
       })

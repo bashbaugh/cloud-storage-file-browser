@@ -1,4 +1,4 @@
-const {Storage} = require('@google-cloud/storage')
+const { Storage } = require('@google-cloud/storage')
 
 const storage = new Storage()
 const bucket = storage.bucket(process.env.CDN_BUCKET_NAME)
@@ -14,6 +14,7 @@ function setCors(req, res) {
   }
 }
 
+// Get request to get all files
 exports.getFiles = (req, res) => {
   setCors(req, res)
 
