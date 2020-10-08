@@ -24,5 +24,15 @@ export default {
         'Authorization': `Bearer ${this.idToken}`
       }
     })
+  },
+  deleteFile (filepath) {
+    return axios.post('/manage-files', {
+      action: 'deleteFile',
+      filepath
+    }, {
+      headers: {
+        'Authorization': `Bearer ${this.idToken}`
+      }
+    })
   }
 }

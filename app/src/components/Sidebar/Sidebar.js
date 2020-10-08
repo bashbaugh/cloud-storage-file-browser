@@ -19,7 +19,7 @@ export default ({ profile, openFileUpload, openFolderCreator }) => {
       visible
       width='thin'
     >
-      <Header as='h4' color='grey' style={{ margin: '10px auto' }}>CDN File Manager</Header>
+      <Header as='h4' color='grey' style={{ margin: '10px auto' }}>{ config.appName }</Header>
       <Image src={profile.imageUrl} avatar/>
       <Menu.Item as='a'>
         <Icon name='folder' />

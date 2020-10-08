@@ -65,6 +65,16 @@ exports.manageFiles = (req, res) => {
         .catch((err) => {
           return res.status(500).json({ error: 'save-error' })
         })
+    case 'deleteFile':
+      const file = bucket.file(body.filepath)
+      return file.delete()
+        .then(() => {
+          return res.json({ deleted: true })
+        })
+        .catch(err => {
+          console.error(err)
+          return res.status(500).json({ error: 'Unable to delete file'})
+        })
 
     default:
       res.status(404).send(`Couldn\'t find action`)
