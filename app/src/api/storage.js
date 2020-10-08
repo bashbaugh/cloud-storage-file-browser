@@ -14,5 +14,8 @@ export default {
         'Authorization': `Bearer ${this.idToken}`
       }
     })
+  },
+  addFolder () {
+    return axios
   }
 }

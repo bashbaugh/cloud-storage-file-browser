@@ -5,15 +5,17 @@ import FileCard from '../FileCard/FileCard'
 import { formatBytes, formatDatetime } from '../../util/fileutil'
 import api from '../../api/storage'
 
-const FileExplorer = ({ idToken, profile }) => {
+const FileExplorer = ({ idToken, profile, setExplorerPath }) => {
   const [state, setState] = useState({
     loading: false,
     loadingError: false,
     bucketName: 'objects'
   })
-  const [path, setPath] = useState([])
+  const [path, setPathState] = useState([])
   const [files, setFiles] = useState([]) // All file objects
   const [view, setView] = useState('list')
+
+  const setPath = (p) => { setPathState(p); setExplorerPath(p); }
 
   const filesInPath = () => files // Files and folders in current path, excluding full path in names, sorted with folders first.
     // If filename starts with current path, is in root dir, and isn't the folder itself then include
@@ -67,7 +69,7 @@ const FileExplorer = ({ idToken, profile }) => {
       <Header as='h2'>
         <u>Files</u>
       </Header>
-      <div className='buttons'>
+      <div className='explorer-buttons'>
         <Button icon='arrow alternate circle up' basic size='tiny' color='blue' onClick={() => setPath(path.slice(0, -1))}/>
         <Button basic color='green' size='tiny' onClick={getFiles}>
           <Icon name='refresh' loading={state.refreshing}/>
@@ -106,7 +108,7 @@ const FileExplorer = ({ idToken, profile }) => {
           </Message.Content>
           </Message>
         }
-        { !files || !files.length || !files[0].name && !state.loading && <p>There are no files here :(</p>}
+        { !filesInPath().length && !state.loading && <p>There are no files here :(</p>}
         { view === 'list' ? (
           <List divided relaxed>
             {fileCards()}

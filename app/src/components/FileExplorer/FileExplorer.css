@@ -2,8 +2,9 @@
     margin: 20px 0;
 }
 
-.buttons > *:not(:first-child)  {
+.explorer-buttons > *:not(:first-child)  {
     margin-left: 5px !important;
+    margin-bottom: 15px;
 }
 
 .files {
