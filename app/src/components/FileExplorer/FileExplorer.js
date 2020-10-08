@@ -5,7 +5,7 @@ import FileCard from '../FileCard/FileCard'
 import { formatBytes, formatDatetime } from '../../util/fileutil'
 import api from '../../api/storage'
 
-const FileExplorer = ({ idToken, profile, setExplorerPath }) => {
+const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh }) => {
   const [state, setState] = useState({
     loading: false,
     loadingError: false,
@@ -36,12 +36,13 @@ const FileExplorer = ({ idToken, profile, setExplorerPath }) => {
   }
 
   useEffect(() => {
-    // When idToken is set, start loading files.
-    if (!idToken || idToken.length < 3) return
+    // When idToken and doRefresh are set, refresh the files
+    if (!idToken || idToken.length < 3 || !doRefresh) return
     setState({...state, loading: true})
 
     getFiles()
-  }, [idToken])
+    didRefresh()
+  }, [idToken, doRefresh])
 
   const fileCards = () => {
     return filesInPath().map((file) => (

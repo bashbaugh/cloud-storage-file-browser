@@ -13,6 +13,7 @@ function App() {
   const [profile, setProfile] = useState({})
 
   const [explorerPath, setExplorerPath] = useState('') // Current file explorer path
+  const [doRefresh, refreshExplorer] = useState(true)
 
   const [fileUploadOpen, setFileUploadOpen] = useState(false)
   const [folderCreatorOpen, setFolderCreatorOpen] = useState(false)
@@ -35,10 +36,17 @@ function App() {
           idToken={idToken}
           profile={profile}
           setExplorerPath={setExplorerPath}
+          doRefresh={doRefresh}
+          didRefresh={() => refreshExplorer(false)}
         />
       </section>
       <FileUploadModal idToken={idToken} open={fileUploadOpen} closeModal={() => setFileUploadOpen(false)}/>
-      <FolderCreationModal open={folderCreatorOpen} closeModal={() => setFolderCreatorOpen(false)} path={explorerPath}/>
+      <FolderCreationModal
+        open={folderCreatorOpen}
+        closeModal={() => setFolderCreatorOpen(false)}
+        path={explorerPath}
+        onSuccess={() => {setFolderCreatorOpen(false); refreshExplorer(true)}}
+        />
     </div>
   );
 }

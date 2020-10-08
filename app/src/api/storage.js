@@ -15,7 +15,14 @@ export default {
       }
     })
   },
-  addFolder () {
-    return axios
+  addFolder (folderpath) {
+    return axios.post('/manage-files', {
+      action: 'addFolder',
+      folderpath
+    }, {
+      headers: {
+        'Authorization': `Bearer ${this.idToken}`
+      }
+    })
   }
 }

@@ -8,7 +8,7 @@ function setCors(req, res) {
   res.set('Access-Control-Allow-Credentials', 'true')
   if (req.method === 'OPTIONS') {
     res.set('Access-Control-Allow-Methods', 'GET, POST');
-    res.set('Access-Control-Allow-Headers', 'Authorization');
+    res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
     res.set('Access-Control-Max-Age', '3600');
     res.status(204).send('')
   }
@@ -20,7 +20,13 @@ exports.manageFiles = (req, res) => {
 
   if (!req.method === 'POST') return res.status(405).send('Method not allowed')
 
-  const body = JSON.parse(req.body) // We have to do this for some reason as the body is a string or smth
+  let body
+
+  try {
+    body = JSON.parse(req.body) // We have to do this for some reason as the body is a string sometimes??? This is the only way I got it to work.
+  } catch {
+    body = req.body
+  }
 
   switch (body.action) { // So for some reason I can only access the body through brace notation rather than dot notation
     /* Action getNewUploadUrl: Generates a signed file POST URL.
@@ -46,6 +52,20 @@ exports.manageFiles = (req, res) => {
             const response = data[0]
             return res.json({ url: response.url, fields: response.fields })
         })
+    case 'addFolder':
+      const newFolder = bucket.file(body.folderpath + '/')
+      return newFolder.exists()
+        .then(([exists]) => {
+          if (exists) return res.status(409).json({ error: 'file-exists'}) // 409 conflict
+          return newFolder.save('')
+        })
+        .then(() => {
+          res.json({ saved: true })
+        })
+        .catch((err) => {
+          return res.status(500).json({ error: 'save-error' })
+        })
+
     default:
       res.status(404).send(`Couldn\'t find action`)
   }
