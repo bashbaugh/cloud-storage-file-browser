@@ -42,7 +42,7 @@ function App() {
       </section>
       <FileUploadModal
         open={fileUploadOpen}
-        closeModal={() => setFileUploadOpen(false)}
+        closeModal={() => {setFileUploadOpen(false); refreshExplorer(true)}}
         path={explorerPath}
         onSuccess={() => {setFileUploadOpen(false); refreshExplorer(true)}}
       />

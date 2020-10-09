@@ -18,12 +18,14 @@ const FileUploadModal = ({ open, closeModal, path, onSuccess }) => {
     setProgress(0)
     setStatus('')
     if (!clearFiles) return
-    fileInput.current.value = null
+    if (fileInput.current) fileInput.current.value = null
     setFiles([])
   }
 
   const startUpload = () => {
-    files.forEach((file, i) => {
+    let failed = false
+    for (const [i, file] of files.entries()) {
+      if (failed) break
       reset(false)
       setStatus('Requesting upload policy...')
       api.getNewUploadPolicy(file.name, file.type, file.size)
@@ -33,17 +35,26 @@ const FileUploadModal = ({ open, closeModal, path, onSuccess }) => {
         .then((res) => {
           setUploading(true)
           setStatus(`Uploading file ${i + 1} of ${files.length}...`)
-          return api.postFile(res.data, file)
+          return api.postFile(res.data, file, (p) => setProgress(Math.round(p * 100 * 10) / 10)) // Post file and set progress callback
             .catch((err) => Promise.reject(`Unable to upload file ${i+1}`))
         })
         .then((res) => {
-          // Handle upload response
+          if (i + 1 === files.length) {
+            setProgress(100)
+            setStatus(`All files successfully uploaded.`)
+            reset(true)
+            onSuccess()
+          }
         })
         .catch((err) => { // Handle any error that occurred
           setError(true)
-          setStatus(err)
+          setUploading(false)
+          setProgress(100)
+          console.error(err)
+          setStatus(err + ' (preceding files successfully uploaded)')
+          failed = true
         })
-    })
+    }
   }
 
   const onFileChange = (e) => {
@@ -72,7 +83,7 @@ const FileUploadModal = ({ open, closeModal, path, onSuccess }) => {
             </List>
           </div>
           <p style={{textAlign: 'right', marginRight: '30px', color: error ? 'red' : 'black'}}><strong>{status}</strong></p>
-          {status && <Progress percent={progress} autoSuccess progress indicating={uploading} error={error} />}
+          {status && <Progress percent={progress} color='teal' progress active={uploading} error={error} />}
         </Modal.Content>
         <Modal.Actions>
           <Button color='black' onClick={() => {reset(true); closeModal();}}>

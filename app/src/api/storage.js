@@ -47,14 +47,15 @@ export default {
       }
     })
   },
-  postFile (uploadPolicy, file) {
+  postFile (uploadPolicy, file, progressCb) {
     const data = new FormData()
     for (const [key, value] of Object.entries(uploadPolicy.fields)) { // Add form fields, including policy and signature, to formdata
       data.append(key, value)
     }
-    data.append('success_action_status', '201') // Recieve a 201 response code on success.
     data.append('file', file) // Add the file to the formdata
 
-    return axiosLib.post(uploadPolicy.url, data) // Use the axiosLib because it's a different API baseURL
+    return axiosLib.post(uploadPolicy.url, data, { // Use the axiosLib because it's a different API baseURL
+      onUploadProgress: (p) => progressCb(p.loaded / p.total)
+    })
   }
 }

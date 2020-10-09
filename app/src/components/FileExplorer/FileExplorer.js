@@ -4,6 +4,7 @@ import { Header, Segment, Icon, Breadcrumb, List, Card, Button, Message, Modal }
 import FileCard from '../FileCard/FileCard'
 import { formatBytes, formatDatetime } from '../../util/fileutil'
 import api from '../../api/storage'
+import config from '../../config'
 
 const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh }) => {
   const [state, setState] = useState({
@@ -26,8 +27,8 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
   const setPath = (p) => { setPathState(p); setExplorerPath(p); }
 
   const filesInPath = (p = path) => files // Files and folders in current path, excluding full path in names, sorted with folders first.
-    // If filename starts with current path, is in root dir, and isn't the folder itself then include
-    .filter(file => (!file.name.slice(0, -1).includes('/') && !p.length) || (file.name.startsWith(p.join('/')) && p.length) && file.name !== p.join('/') + '/')
+    // If filename starts with current path, is in root dir, isn't the folder itself, and isn't a hidden config file, then include
+    .filter(file => ((!file.name.slice(0, -1).includes('/') && !p.length) || (file.name.startsWith(p.join('/') + '/') && p.length)) && file.name !== p.join('/') + '/' && !file.name.startsWith('.bucket'))
     .map(file => ({...file, isFolder: file.name.endsWith('/'), path: file.name, name: file.name.endsWith('/') ?
         file.name.split('/')[file.name.split('/').length - 2] :
         file.name.split('/')[file.name.split('/').length - 1]})) // Just include name without path

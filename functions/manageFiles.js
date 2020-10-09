@@ -14,6 +14,24 @@ function setCors(req, res) {
   }
 }
 
+function setBucketCors() {
+  const corsSetFlag = bucket.file('.bucket.cors-set')
+  corsSetFlag.exists()
+    .then(([exists]) => {
+      if (!exists) {
+        const corsConfig = [{
+          "method": ["*"],
+          "origin": ["*"],
+          "responseHeader": ["*"]
+        }]
+        return bucket.setCorsConfiguration(corsConfig)
+      }
+    })
+    .then(() => {
+      corsSetFlag.save('This is a config file used by the CDN File Manager')
+    })
+}
+
 // Post request to manage files, create folders, request upload URLs, etc.
 exports.manageFiles = (req, res) => {
   setCors(req, res)
@@ -35,9 +53,9 @@ exports.manageFiles = (req, res) => {
      * fileSize: the size in bytes of the file
      */
     case 'getNewUploadUrl':
+      setBucketCors()
       const newFile = bucket.file(body.filepath)
-      const expDate = new Date()
-      expDate.setHours(expDate.getHours() + 5) // allow 5 hours for upload
+      const expDate = Date.now() + 60 * 60 * 1000 // Allow 60 minutes for upload
       const options = {
         expires: expDate,
         conditions: [
@@ -45,6 +63,8 @@ exports.manageFiles = (req, res) => {
           ['content-length-range', 0, body.fileSize + 1024],
         ],
         fields: {
+          'success_action_status': '201',
+          'Content-Type': body.fileContentType
         }
       }
       return newFile.generateSignedPostPolicyV4(options)
