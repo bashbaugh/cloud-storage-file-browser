@@ -40,7 +40,12 @@ function App() {
           didRefresh={() => refreshExplorer(false)}
         />
       </section>
-      <FileUploadModal idToken={idToken} open={fileUploadOpen} closeModal={() => setFileUploadOpen(false)}/>
+      <FileUploadModal
+        open={fileUploadOpen}
+        closeModal={() => setFileUploadOpen(false)}
+        path={explorerPath}
+        onSuccess={() => {setFileUploadOpen(false); refreshExplorer(true)}}
+      />
       <FolderCreationModal
         open={folderCreatorOpen}
         closeModal={() => setFolderCreatorOpen(false)}
