@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Modal, Button, Icon, Input,  } from 'semantic-ui-react'
+import { toast } from 'react-toastify'
 import api from '../../api/storage'
 
 const FolderUploadModal = ({ open, closeModal, path, onSuccess }) => {
@@ -13,7 +14,9 @@ const FolderUploadModal = ({ open, closeModal, path, onSuccess }) => {
       .then((res) => {
         setSaving(false)
         setError(false)
-        if (res.data.saved) onSuccess()
+        if (!res.data.saved) return
+        onSuccess()
+        toast.dark('📁 Folder created!')
       })
       .catch((err) => {
         setSaving(false)

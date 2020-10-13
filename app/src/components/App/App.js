@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import logo from '../../assets/logo.svg';
 import './App.css';
+import { ToastContainer } from 'react-toastify'
 import Sidebar from '../Sidebar/Sidebar'
 import FileExplorer from '../FileExplorer/FileExplorer'
 import Auth from '../GoogleAuth/GoogleAuth'
@@ -51,7 +52,18 @@ function App() {
         closeModal={() => setFolderCreatorOpen(false)}
         path={explorerPath}
         onSuccess={() => {setFolderCreatorOpen(false); refreshExplorer(true)}}
-        />
+      />
+      <ToastContainer
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   );
 }

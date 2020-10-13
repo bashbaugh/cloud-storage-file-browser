@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import './FileExplorer.css'
 import { Header, Segment, Icon, Breadcrumb, List, Card, Button, Message, Modal } from 'semantic-ui-react'
+import { toast } from 'react-toastify'
 import FileCard from '../FileCard/FileCard'
 import { formatBytes, formatDatetime } from '../../util/fileutil'
 import api from '../../api/storage'
@@ -59,6 +60,7 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
       .then((res) => {
         if (res.data.deleted) setDeletionState({...deletionState, open: false, error: false, saving: false})
         getFiles()
+        toast.dark("✔️ File deleted")
       })
       .catch((err) => {
         setDeletionState({...deletionState, error: true, saving: false})
@@ -80,6 +82,19 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
           onClickItem={() => {
             if (file.isFolder) {
               setPath(file.path.slice(0, -1).split('/')) // Remove ending slash from folder path and split into separate folder names
+            } else {
+              navigator.clipboard.writeText(config.CDN_URL + file.path)
+                .then(() => {
+                  toast.dark("📋 File URL copied to clipboard")
+                })
+                .catch(() => {
+                  toast.dark(`File URL: ${config.CDN_URL + file.path}`, {
+                    position: 'top-center',
+                    draggable: false,
+                    closeOnClick: false,
+                    autoClose: 10000
+                  })
+                })
             }
           }}
         />
@@ -168,7 +183,6 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
           </Button>
         </Modal.Actions>
       </Modal>
-      
     </div>
   )
 }

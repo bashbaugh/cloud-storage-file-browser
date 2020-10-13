@@ -1,6 +1,7 @@
 import React, { useState, useEffect, createRef } from 'react'
 import './FileUploadModal.css'
 import { Modal, Button, Icon, List, Progress } from 'semantic-ui-react'
+import { toast } from 'react-toastify'
 import { formatBytes } from '../../util/fileutil'
 import api from '../../api/storage'
 
@@ -42,6 +43,7 @@ const FileUploadModal = ({ open, closeModal, path, onSuccess }) => {
           if (i + 1 === files.length) {
             setProgress(100)
             setStatus(`All files successfully uploaded.`)
+            toast.dark("🚀 All files uploaded!")
             reset(true)
             onSuccess()
           }

@@ -2,13 +2,13 @@ import React from 'react'
 import './FileCard.css'
 import { Card, List, Button, Icon, Dropdown } from 'semantic-ui-react'
 
-const fileCard = ({ cardType, isFolder, name, size, fileType, url, lastMod, downloadLink, onDelete, onRename, onClickItem}) => {
+const fileCard = ({ cardType, isFolder, name, size, fileType, lastMod, downloadLink, onDelete, onRename, onClickItem}) => {
   if (cardType === 'list') { // File card for list view
     return (
       <List.Item>
         <List.Icon name={isFolder ? 'folder' : 'file'} size='large' verticalAlign='middle'/>
         <List.Content>
-          <List.Header><a href={url || '#'} onClick={onClickItem}>{name}</a>
+          <List.Header><a href='#' onClick={onClickItem}>{name}</a>
             <Dropdown>
               <Dropdown.Menu>
                 {/*<Dropdown.Item icon='cloud download' text='Download' />*/}
@@ -31,7 +31,7 @@ const fileCard = ({ cardType, isFolder, name, size, fileType, url, lastMod, down
     return (
       <Card>
         <Card.Content>
-          <Card.Header><a href={url || '#'} onClick={onClickItem}>{name}</a></Card.Header>
+          <Card.Header><a href='#' onClick={onClickItem}>{name}</a></Card.Header>
           <Card.Meta>
             {!isFolder && size}
             {isFolder ? 'folder' : ` \u00B7 ${fileType} `}

@@ -1,9 +1,10 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
+import React from 'react'
+import ReactDOM from 'react-dom'
+import './index.css'
 import 'semantic-ui-css/semantic.min.css'
-import App from './components/App/App';
-import * as serviceWorker from './serviceWorker';
+import 'react-toastify/dist/ReactToastify.min.css'
+import App from './components/App/App'
+import * as serviceWorker from './serviceWorker'
 
 ReactDOM.render(
   <React.StrictMode>
