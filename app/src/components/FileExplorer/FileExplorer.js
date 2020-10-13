@@ -58,9 +58,9 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
     setDeletionState({...deletionState, saving: true})
     api.deleteFile(deletionState.file)
       .then((res) => {
+        toast.dark(`✔️ ${deletionState.isFolder ? 'Folder' : 'File'} deleted`)
         if (res.data.deleted) setDeletionState({...deletionState, open: false, error: false, saving: false})
         getFiles()
-        toast.dark("✔️ File deleted")
       })
       .catch((err) => {
         setDeletionState({...deletionState, error: true, saving: false})
@@ -78,7 +78,11 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
           name={file.name}
           size={formatBytes(file.size)}
           downloadLink={file.downloadLink}
-          onDelete={() => setDeletionState({...deletionState, open: true, file: file.path, isFolder: file.isFolder})}
+          onDelete={() => {
+            // If the folder isn't empty then don't delete (TODO recursive folder deletion)
+            if (file.isFolder && filesInPath(file.path.split('/').slice(0, -1)).length) return toast.dark('❌ You must delete all files from this folder first.')
+            setDeletionState({...deletionState, open: true, file: file.path, isFolder: file.isFolder})
+          }}
           onClickItem={() => {
             if (file.isFolder) {
               setPath(file.path.slice(0, -1).split('/')) // Remove ending slash from folder path and split into separate folder names
@@ -170,7 +174,6 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
         </Header>
         <Modal.Content>
           <p style={{textAlign: 'center'}}>Are you sure you want to delete <span style={{ color: 'orange', fontWeight: 'bold'}}>{deletionState.file}</span>?
-            {deletionState.isFolder && 'This is a folder. Folder deletion is not yet supported.'}
           </p>
           { deletionState.error && <p style={{textAlign: 'center', color: 'red'}}>Something went wrong and we couldn't delete that file.</p>}
         </Modal.Content>
