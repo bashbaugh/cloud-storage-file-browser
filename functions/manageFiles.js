@@ -8,6 +8,10 @@ const oauthClient = new OAuth2Client(process.env.OAUTH_CLIENT_ID)
 
 const CDN_ADMINS = process.env.CDN_ADMINS.split(',') // CDN_ADMINS should be a comma-seperated list of admins
 
+const CDN_URL = process.env.CDN_URL || null
+
+const SHARED_FILE_EXPIRY_DAYS = process.env.SHARED_FILE_EXPIRY_DAYS || 7
+
 function setCors(req, res) {
   res.set('Access-Control-Allow-Origin', '*')
   res.set('Access-Control-Allow-Credentials', 'true')
@@ -102,6 +106,17 @@ exports.manageFiles = async (req, res) => {
       case 'setPrivate':
         await bucket.file(body.filepath).makePrivate()
         return res.json({ success: true })
+      case 'getShareUrl':
+        const expiryDate = new Date(Date.now() + 60 * 60 * 1000) // Plus one hour
+        if (!body.download) expiryDate.setDate(expiryDate.getDate() + SHARED_FILE_EXPIRY_DAYS)
+        const [url] = await bucket.file(body.filepath).getSignedUrl({
+          version: 'v2',
+          action: 'read',
+          expires: expiryDate,
+          cname: body.download ? null : CDN_URL,
+          promptSaveAs: body.download ? body.filepath.split('/')[body.filepath.split('/').length - 1] : null
+        })
+        return res.json({ url, duration: SHARED_FILE_EXPIRY_DAYS })
       case 'getNewUploadUrl':
         setBucketCors()
         const newFile = bucket.file(body.filepath)

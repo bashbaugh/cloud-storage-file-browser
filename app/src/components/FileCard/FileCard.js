@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import './FileCard.css'
 import { Card, List, Button, Icon, Dropdown, Checkbox } from 'semantic-ui-react'
 
-const FileCard = ({ cardType, isFolder, name, size, fileType, lastMod, downloadLink, checkIsPublic, onDelete, onRename, onClickItem, onSetPublic}) => {
+const FileCard = ({ cardType, isFolder, name, size, fileType, lastMod, checkIsPublic, onDelete, onRename, onClickItem, onDownload, onSetPublic}) => {
   const [isPublic, setIsPublic] = useState(false)
 
   if (cardType === 'list') { // File card for list view
@@ -14,7 +14,7 @@ const FileCard = ({ cardType, isFolder, name, size, fileType, lastMod, downloadL
             <Dropdown onClick={async () => setIsPublic(await checkIsPublic())}>
               <Dropdown.Menu>
                 {/*<Dropdown.Item icon='cloud download' text='Download' />*/}
-                <Dropdown.Item icon='download' text='Download' disabled={isFolder} onClick={() => window.open(downloadLink, '_blank')} />
+                <Dropdown.Item icon='download' text='Download' disabled={isFolder} onClick={() => onDownload(isPublic)} />
                 <Dropdown.Divider/>
                 <Dropdown.Item icon={isPublic ? 'lock' : 'unlock'} text={isPublic ? 'Make private' : 'Make public'} disabled={isFolder} onClick={() => {onSetPublic(!isPublic)}}/>
                 <Dropdown.Item icon='edit' text='Rename' onClick={onRename} />
@@ -34,7 +34,16 @@ const FileCard = ({ cardType, isFolder, name, size, fileType, lastMod, downloadL
     return (
       <Card>
         <Card.Content>
-          <Card.Header><a href='#' onClick={onClickItem}>{name}</a></Card.Header>
+          <Card.Header>
+            <a href='#' onClick={onClickItem}>{name}</a>
+            <Dropdown onClick={async () => setIsPublic(await checkIsPublic())} icon='caret down'>
+              <Dropdown.Menu>
+                <Dropdown.Item icon={isPublic ? 'lock' : 'unlock'} text={isPublic ? 'Make private' : 'Make public'} disabled={isFolder} onClick={() => {onSetPublic(!isPublic)}}/>
+                <Dropdown.Item icon='edit' text='Rename' onClick={onRename} />
+                {/*<Dropdown.Item icon='trash' text='Delete' onClick={onDelete} />*/}
+              </Dropdown.Menu>
+            </Dropdown>
+          </Card.Header>
           <Card.Meta>
             {!isFolder && size}
             {isFolder ? 'folder' : ` \u00B7 ${fileType} `}
@@ -46,12 +55,18 @@ const FileCard = ({ cardType, isFolder, name, size, fileType, lastMod, downloadL
         </Card.Content>
         <Card.Content extra>
           <Button.Group fluid>
-            { !isFolder && <Button basic compact size='mini' color='green' onClick={() => window.open(downloadLink, '_blank')}>
+            { !isFolder && <>
+            <Button basic compact size='mini' color='green' onClick={() => onDownload(isPublic)}>
               <Icon name='download'/>
-            </Button>}
-            <Button basic compact size='mini' color='blue' onClick={onRename}>
-              <Icon name='edit outline'/>
             </Button>
+            <Button basic compact size='mini' color='violet' onClick={onClickItem}>
+              <Icon name='linkify'/>
+            </Button>
+            </>}
+
+            {/*<Button basic compact size='mini' color='blue' onClick={onRename}>*/}
+            {/*  <Icon name='edit outline'/>*/}
+            {/*</Button>*/}
             <Button basic compact size='mini' color='red' onClick={onDelete}>
               <Icon name='trash alternate outline'/>
             </Button>

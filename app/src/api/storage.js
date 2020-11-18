@@ -31,6 +31,18 @@ export default {
       }
     })
   },
+  getSharableUrl (filepath, download) {
+    return axios.post('/manage-files', {
+      action: 'getShareUrl',
+      filepath,
+      download
+    }, {
+      headers: {
+        'Authorization': `Bearer ${this.idToken}`
+      }
+    })
+      .then(res => res.data)
+  },
   addFolder (folderpath) {
     return axios.post('/manage-files', {
       action: 'addFolder',

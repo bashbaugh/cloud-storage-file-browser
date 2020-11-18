@@ -77,29 +77,55 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
           lastMod={formatDatetime(file.updated)}
           name={file.name}
           size={formatBytes(file.size)}
-          downloadLink={file.downloadLink}
           isPublic={false}
           onDelete={() => {
             // If the folder isn't empty then don't delete (TODO recursive folder deletion)
             if (file.isFolder && filesInPath(file.path.split('/').slice(0, -1)).length) return toast.dark('❌ You must delete all files from this folder first.')
             setDeletionState({...deletionState, open: true, file: file.path, isFolder: file.isFolder})
           }}
-          onClickItem={() => {
+          onClickItem={async () => {
             if (file.isFolder) {
               setPath(file.path.slice(0, -1).split('/')) // Remove ending slash from folder path and split into separate folder names
             } else {
-              navigator.clipboard.writeText(config.CDN_URL + file.path)
-                .then(() => {
-                  toast.dark("📋 File URL copied to clipboard")
-                })
-                .catch(() => {
-                  toast.dark(`File URL: ${config.CDN_URL + file.path}`, {
-                    position: 'top-center',
-                    draggable: false,
-                    closeOnClick: false,
-                    autoClose: 10000
+              if (await api.checkIsPublic(config.CDN_URL + file.path)) {
+                navigator.clipboard.writeText(config.CDN_URL + file.path)
+                  .then(() => {
+                    toast.dark("📋 File URL copied to clipboard")
                   })
-                })
+                  .catch(() => {
+                    toast.dark(`File URL: ${config.CDN_URL + file.path}`, {
+                      position: 'top-center',
+                      draggable: false,
+                      closeOnClick: false,
+                      autoClose: 10000
+                    })
+                  })
+              } else {
+                const {url, duration} = await api.getSharableUrl(file.path)
+                if (!url) toast.dark("🚫 Couldn't get sharable URL. Try making the file public instead.")
+                navigator.clipboard.writeText(url)
+                  .then(() => {
+                    toast.dark(`🔗 Sharable URL copied to clipboard. It will expire in ${duration} days. Make this file public to get a permanent public link.`, {
+                      autoClose: 8000
+                    })
+                  })
+                  .catch(() => {
+                    toast.dark(`Sharable URL (will expire in ${duration} days): ${url}`, {
+                      position: 'top-center',
+                      draggable: false,
+                      closeOnClick: false,
+                      autoClose: 10000
+                    })
+                  })
+              }
+            }
+          }}
+          onDownload={async (publicDownload) => {
+            if (publicDownload) {
+              window.open(file.downloadLink, '_blank')
+            } else {
+              const { url } = await api.getSharableUrl(file.path, true)
+              window.open(url, '_blank')
             }
           }}
           checkIsPublic={() => api.checkIsPublic(config.CDN_URL + file.path)}
