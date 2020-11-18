@@ -1,16 +1,22 @@
 const { Storage } = require('@google-cloud/storage')
+const { OAuth2Client } = require('google-auth-library')
 
 const storage = new Storage()
 const bucket = storage.bucket(process.env.CDN_BUCKET_NAME)
+
+const oauthClient = new OAuth2Client(process.env.OAUTH_CLIENT_ID)
+
+const CDN_ADMINS = process.env.CDN_ADMINS.split(',') // CDN_ADMINS should be a comma-seperated list of admins
 
 function setCors(req, res) {
   res.set('Access-Control-Allow-Origin', '*')
   res.set('Access-Control-Allow-Credentials', 'true')
   if (req.method === 'OPTIONS') {
-    res.set('Access-Control-Allow-Methods', 'GET, POST');
-    res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
-    res.set('Access-Control-Max-Age', '3600');
+    res.set('Access-Control-Allow-Methods', 'POST')
+    res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type')
+    res.set('Access-Control-Max-Age', '3600')
     res.status(204).send('')
+    return true
   }
 }
 
@@ -33,10 +39,25 @@ function setBucketCors() {
 }
 
 // Post request to manage files, create folders, request upload URLs, etc.
-exports.manageFiles = (req, res) => {
-  setCors(req, res)
+exports.manageFiles = async (req, res) => {
+  if (setCors(req, res)) return // Returns true on OPTIONS
 
-  if (!req.method === 'POST') return res.status(405).send('Method not allowed')
+  const idToken = req.headers.authorization && req.headers.authorization.split('Bearer ')[1]
+
+  if (!idToken) return res.status(401).send("no id token")
+
+  try {
+    const userEmail = (await oauthClient.verifyIdToken({
+      idToken: idToken,
+      audience: process.env.OAUTH_CLIENT_ID
+    })).getPayload().email
+
+    if (!CDN_ADMINS.includes(userEmail)) return res.status(403).send("Unauthorized")
+  } catch (err) {
+    console.error(err)
+
+    return res.status(403).send("Unauthorized")
+  }
 
   let body
 
@@ -46,12 +67,33 @@ exports.manageFiles = (req, res) => {
     body = req.body
   }
 
-  switch (body.action) { // So for some reason I can only access the body through brace notation rather than dot notation
+  switch (body.action) {
     /* Action getNewUploadUrl: Generates a signed file POST URL.
      * filepath: Where to upload the file to (in the bucket)
      * fileContentType: the MIME type of the file to be uploaded
      * fileSize: the size in bytes of the file
      */
+    case 'getFiles':
+      return bucket.getFiles()
+        .then((files) => {
+          const filesMetadata = files[0].map((file) => file.metadata)
+          const filesResponse = filesMetadata.map((file) => ({
+            cacheControl: file.cacheControl || '',
+            contentEncoding: file.contentEncoding || '',
+            contentType: file.contentType || '',
+            version: file.generation,
+            id: file.id,
+            downloadLink: file.mediaLink,
+            name: file.name,
+            size: file.size,
+            updated: file.updated
+          }))
+          return res.json({ bucket: bucket.name, files: filesResponse })
+        })
+        .catch((err) => {
+          console.error(new Error(err))
+          return res.status(500).send("Unable to get files")
+        })
     case 'getNewUploadUrl':
       setBucketCors()
       const newFile = bucket.file(body.filepath)
@@ -97,7 +139,7 @@ exports.manageFiles = (req, res) => {
         })
 
     default:
-      res.status(404).send(`Couldn\'t find action`)
+      res.status(400).send(`Couldn\'t find action`)
   }
 
 }

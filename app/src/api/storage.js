@@ -5,11 +5,12 @@ const axios = axiosLib.create({
   baseURL: config.APIEndpoint
 })
 
-
 export default {
   idToken: null,
   getFiles () {
-    return axios.get('/get-files', {
+    return axios.post('/manage-files', {
+      action: 'getFiles',
+    }, {
       headers: {
         'Authorization': `Bearer ${this.idToken}`
       }

@@ -2,7 +2,7 @@
   "name": "functions",
   "version": "0.1.0",
   "description": "Functions for the web app",
-  "main": "getFiles.js",
+  "main": "index.js",
   "author": "Benjamin Ashbaugh",
   "license": "MIT",
   "scripts": {
@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@google-cloud/functions-framework": "^1.7.1",
-    "@google-cloud/storage": "^5.3.0"
+    "@google-cloud/storage": "^5.3.0",
+    "google-auth-library": "^6.1.3"
   }
 }

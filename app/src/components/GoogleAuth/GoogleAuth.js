@@ -14,7 +14,7 @@ const GoogleAuth = ({ setIdToken, setProfile }) => {
   const onSuccess = (isSignedIn) => {
     let user = window.gauth.currentUser.get()
     let profile = user.getBasicProfile()
-    let tokenObj = user.getAuthResponse(false) // Get ID token
+    let tokenObj = user.getAuthResponse(true) // Get ID token
     if (isSignedIn && user.hasGrantedScopes(SCOPES) && tokenObj) {
       setIdToken(tokenObj.id_token)
       setProfile({
