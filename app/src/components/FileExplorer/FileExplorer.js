@@ -78,6 +78,7 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
           name={file.name}
           size={formatBytes(file.size)}
           downloadLink={file.downloadLink}
+          isPublic={false}
           onDelete={() => {
             // If the folder isn't empty then don't delete (TODO recursive folder deletion)
             if (file.isFolder && filesInPath(file.path.split('/').slice(0, -1)).length) return toast.dark('❌ You must delete all files from this folder first.')
@@ -100,6 +101,16 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
                   })
                 })
             }
+          }}
+          checkIsPublic={() => api.checkIsPublic(config.CDN_URL + file.path)}
+          onSetPublic={(pub) => {
+            api.setPublicOrPrivate(file.path, pub)
+              .then(() => {
+                toast.dark(pub ? "🌎 File is now publicly accessible" : "🔑 File is now private")
+              })
+              .catch(() => {
+                toast.dark("❓ Something went wrong")
+              })
           }}
         />
       )

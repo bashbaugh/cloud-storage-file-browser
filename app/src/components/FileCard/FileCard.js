@@ -1,19 +1,22 @@
-import React from 'react'
+import React, { useState } from 'react'
 import './FileCard.css'
-import { Card, List, Button, Icon, Dropdown } from 'semantic-ui-react'
+import { Card, List, Button, Icon, Dropdown, Checkbox } from 'semantic-ui-react'
 
-const fileCard = ({ cardType, isFolder, name, size, fileType, lastMod, downloadLink, onDelete, onRename, onClickItem}) => {
+const FileCard = ({ cardType, isFolder, name, size, fileType, lastMod, downloadLink, checkIsPublic, onDelete, onRename, onClickItem, onSetPublic}) => {
+  const [isPublic, setIsPublic] = useState(false)
+
   if (cardType === 'list') { // File card for list view
     return (
       <List.Item>
         <List.Icon name={isFolder ? 'folder' : 'file'} size='large' verticalAlign='middle'/>
         <List.Content>
           <List.Header><a href='#' onClick={onClickItem}>{name}</a>
-            <Dropdown>
+            <Dropdown onClick={async () => setIsPublic(await checkIsPublic())}>
               <Dropdown.Menu>
                 {/*<Dropdown.Item icon='cloud download' text='Download' />*/}
                 <Dropdown.Item icon='download' text='Download' disabled={isFolder} onClick={() => window.open(downloadLink, '_blank')} />
                 <Dropdown.Divider/>
+                <Dropdown.Item icon={isPublic ? 'lock' : 'unlock'} text={isPublic ? 'Make private' : 'Make public'} disabled={isFolder} onClick={() => {onSetPublic(!isPublic)}}/>
                 <Dropdown.Item icon='edit' text='Rename' onClick={onRename} />
                 <Dropdown.Item icon='trash' text='Delete' onClick={onDelete} />
               </Dropdown.Menu>
@@ -59,4 +62,4 @@ const fileCard = ({ cardType, isFolder, name, size, fileType, lastMod, downloadL
   }
 }
 
-export default fileCard
+export default FileCard

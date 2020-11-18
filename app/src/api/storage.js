@@ -16,6 +16,21 @@ export default {
       }
     })
   },
+  checkIsPublic (url) {
+    return axios.head(url)
+      .then(res => res.status === 200)
+      .catch(res => false)
+  },
+  setPublicOrPrivate (filepath, pub) {
+    return axios.post('/manage-files', {
+      action: pub ? 'setPublic' : 'setPrivate',
+      filepath
+    }, {
+      headers: {
+        'Authorization': `Bearer ${this.idToken}`
+      }
+    })
+  },
   addFolder (folderpath) {
     return axios.post('/manage-files', {
       action: 'addFolder',
