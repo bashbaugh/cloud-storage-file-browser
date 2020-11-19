@@ -14,6 +14,7 @@ async function updateWithUserSettings () {
   const userSettings = JSON.parse((await bucket.file('.bucket.dashboard-settings').download())[0].toString('utf8'))
   if (!userSettings.useSettings) return
   PRIVATE_URL_EXPIRY_DAYS = userSettings.privateUrlExpiration
+  CDN_ADMINS = [process.env.CDN_ADMIN]
   CDN_ADMINS.push(...userSettings.cdnAdmins.split(','))
 }
 
@@ -167,10 +168,10 @@ exports.manageFiles = async (req, res) => {
         return res.json({ deleted: true })
       case 'getSettings':
         const userSettings = JSON.parse((await bucket.file('.bucket.dashboard-settings').download())[0].toString('utf8'))
-        updateWithUserSettings()
         return res.json({ settings: userSettings })
       case 'saveSettings':
         await bucket.file('.bucket.dashboard-settings').save(JSON.stringify(body.settings))
+        updateWithUserSettings()
         return res.json({ success: true })
       default:
         res.status(400).send(`Couldn't find action`)
