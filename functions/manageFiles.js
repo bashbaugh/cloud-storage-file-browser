@@ -1,16 +1,23 @@
 const { Storage } = require('@google-cloud/storage')
 const { OAuth2Client } = require('google-auth-library')
 
-const storage = new Storage()
-const bucket = storage.bucket(process.env.CDN_BUCKET_NAME)
-
 const oauthClient = new OAuth2Client(process.env.OAUTH_CLIENT_ID)
 
-const CDN_ADMINS = process.env.CDN_ADMINS.split(',') // CDN_ADMINS should be a comma-seperated list of admins
-
+const storage = new Storage()
+const bucket = storage.bucket(process.env.CDN_BUCKET_NAME)
 const CDN_URL = process.env.CDN_URL || null
 
-const SHARED_FILE_EXPIRY_DAYS = process.env.SHARED_FILE_EXPIRY_DAYS || 7
+let CDN_ADMINS = [process.env.CDN_ADMIN]
+let PRIVATE_URL_EXPIRY_DAYS = 7
+
+async function updateWithUserSettings () {
+  const userSettings = JSON.parse((await bucket.file('.bucket.dashboard-settings').download())[0].toString('utf8'))
+  if (!userSettings.useSettings) return
+  PRIVATE_URL_EXPIRY_DAYS = userSettings.privateUrlExpiration
+  CDN_ADMINS.push(...userSettings.cdnAdmins.split(','))
+}
+
+updateWithUserSettings()
 
 function setCors(req, res) {
   res.set('Access-Control-Allow-Origin', '*')
@@ -110,7 +117,7 @@ exports.manageFiles = async (req, res) => {
         return res.json({ success: true })
       case 'getShareUrl':
         const expiryDate = new Date(Date.now() + 60 * 60 * 1000) // Plus one hour
-        if (!body.download) expiryDate.setDate(expiryDate.getDate() + SHARED_FILE_EXPIRY_DAYS)
+        if (!body.download) expiryDate.setDate(expiryDate.getDate() + PRIVATE_URL_EXPIRY_DAYS)
         const [url] = await bucket.file(body.filepath).getSignedUrl({
           version: 'v2',
           action: 'read',
@@ -118,7 +125,7 @@ exports.manageFiles = async (req, res) => {
           cname: body.download ? null : CDN_URL,
           promptSaveAs: body.download ? body.filepath.split('/')[body.filepath.split('/').length - 1] : null
         })
-        return res.json({ url, duration: SHARED_FILE_EXPIRY_DAYS })
+        return res.json({ url, duration: PRIVATE_URL_EXPIRY_DAYS })
       case 'getNewUploadUrl':
         setBucketCors()
 
@@ -160,6 +167,7 @@ exports.manageFiles = async (req, res) => {
         return res.json({ deleted: true })
       case 'getSettings':
         const userSettings = JSON.parse((await bucket.file('.bucket.dashboard-settings').download())[0].toString('utf8'))
+        updateWithUserSettings()
         return res.json({ settings: userSettings })
       case 'saveSettings':
         await bucket.file('.bucket.dashboard-settings').save(JSON.stringify(body.settings))
