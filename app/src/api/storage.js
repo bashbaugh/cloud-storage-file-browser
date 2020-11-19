@@ -5,19 +5,21 @@ const axios = axiosLib.create({
   baseURL: config.APIEndpoint
 })
 
+const reqConfig = obj => ({
+  headers: {
+    'Authorization': `Bearer ${obj.idToken}`
+  }
+})
+
 export default {
   idToken: null,
   getFiles () {
     return axios.post('/manage-files', {
       action: 'getFiles',
-    }, {
-      headers: {
-        'Authorization': `Bearer ${this.idToken}`
-      }
-    })
+    }, reqConfig(this))
   },
-  checkIsPublic (url) {
-    return axios.head(url)
+  checkIsPublic (path) {
+    return axios.head(config.BucketUrl + path)
       .then(res => res.status === 200)
       .catch(res => false)
   },
@@ -25,55 +27,35 @@ export default {
     return axios.post('/manage-files', {
       action: pub ? 'setPublic' : 'setPrivate',
       filepath
-    }, {
-      headers: {
-        'Authorization': `Bearer ${this.idToken}`
-      }
-    })
+    }, reqConfig(this))
   },
   getSharableUrl (filepath, download) {
     return axios.post('/manage-files', {
       action: 'getShareUrl',
       filepath,
       download
-    }, {
-      headers: {
-        'Authorization': `Bearer ${this.idToken}`
-      }
-    })
+    }, reqConfig(this))
       .then(res => res.data)
   },
   addFolder (folderpath) {
     return axios.post('/manage-files', {
       action: 'addFolder',
       folderpath
-    }, {
-      headers: {
-        'Authorization': `Bearer ${this.idToken}`
-      }
-    })
+    }, reqConfig(this))
   },
   deleteFile (filepath) {
     return axios.post('/manage-files', {
       action: 'deleteFile',
       filepath
-    }, {
-      headers: {
-        'Authorization': `Bearer ${this.idToken}`
-      }
-    })
+    }, reqConfig(this))
   },
   getNewUploadPolicy (filepath, fileContentType, fileSize) {
     return axios.post('/manage-files', {
       action: 'getNewUploadUrl',
       filepath,
       fileContentType,
-      fileSize
-    }, {
-      headers: {
-        'Authorization': `Bearer ${this.idToken}`
-      }
-    })
+      fileSize,
+    }, reqConfig(this))
   },
   postFile (uploadPolicy, file, progressCb) {
     const data = new FormData()
@@ -85,5 +67,18 @@ export default {
     return axiosLib.post(uploadPolicy.url, data, { // Use the axiosLib because it's a different API baseURL
       onUploadProgress: (p) => progressCb(p.loaded / p.total)
     })
+  },
+  getSettings () {
+    return axios.post('/manage-files', {
+      action: 'getSettings'
+    }, reqConfig(this))
+      .then(res => res.data.settings)
+  },
+  saveSettings (settings) {
+    return axios.post('/manage-files', {
+      action: 'saveSettings',
+      settings
+    }, reqConfig(this))
+      .then(res => res.data)
   }
 }

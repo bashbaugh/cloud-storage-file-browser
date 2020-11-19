@@ -7,6 +7,7 @@ import FileExplorer from '../FileExplorer/FileExplorer'
 import Auth from '../GoogleAuth/GoogleAuth'
 import FileUploadModal from '../FileUploadModal/FileUploadModal'
 import FolderCreationModal from '../FolderCreationModal/FolderCreationModal'
+import SettingsModal from '../SettingsModal/SettingsModal'
 import api from '../../api/storage'
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
 
   const [fileUploadOpen, setFileUploadOpen] = useState(false)
   const [folderCreatorOpen, setFolderCreatorOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   return (
     <div className="App">
@@ -26,6 +28,7 @@ function App() {
           profile={profile}
           openFileUpload={() => setFileUploadOpen(true)}
           openFolderCreator={() => setFolderCreatorOpen(true)}
+          openSettings={() => setSettingsOpen(true)}
         />
       </nav>
       <Auth setIdToken={(t) => {
@@ -52,6 +55,10 @@ function App() {
         closeModal={() => setFolderCreatorOpen(false)}
         path={explorerPath}
         onSuccess={() => {setFolderCreatorOpen(false); refreshExplorer(true)}}
+      />
+      <SettingsModal
+        open={settingsOpen}
+        closeModal={() => setSettingsOpen(false)}
       />
       <ToastContainer
         position="bottom-right"

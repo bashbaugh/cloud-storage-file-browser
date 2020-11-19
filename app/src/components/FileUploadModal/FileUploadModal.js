@@ -23,12 +23,15 @@ const FileUploadModal = ({ open, closeModal, path, onSuccess }) => {
     setFiles([])
   }
 
-  const startUpload = () => {
+  const startUpload = async () => {
+    const shouldBePublic = (await api.getSettings()).defaultPublicFiles
+
     let failed = false
     for (const [i, file] of files.entries()) {
       if (failed) break
       reset(false)
       setStatus('Requesting upload policy...')
+
       api.getNewUploadPolicy(file.name, file.type, file.size)
         .catch((err) => {
           return Promise.reject(`Unable to get upload policy for file ${i+1}`)
@@ -37,6 +40,7 @@ const FileUploadModal = ({ open, closeModal, path, onSuccess }) => {
           setUploading(true)
           setStatus(`Uploading file ${i + 1} of ${files.length}...`)
           return api.postFile(res.data, file, (p) => setProgress(Math.round(p * 100 * 10) / 10)) // Post file and set progress callback
+            .then(() => api.setPublicOrPrivate(file.name, shouldBePublic))
             .catch((err) => Promise.reject(`Unable to upload file ${i+1}`))
         })
         .then((res) => {

@@ -87,7 +87,7 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
             if (file.isFolder) {
               setPath(file.path.slice(0, -1).split('/')) // Remove ending slash from folder path and split into separate folder names
             } else {
-              if (await api.checkIsPublic(config.CDN_URL + file.path)) {
+              if (await api.checkIsPublic(file.path)) {
                 navigator.clipboard.writeText(config.CDN_URL + file.path)
                   .then(() => {
                     toast.dark("📋 File URL copied to clipboard")
@@ -128,7 +128,7 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
               window.open(url, '_blank')
             }
           }}
-          checkIsPublic={() => api.checkIsPublic(config.CDN_URL + file.path)}
+          checkIsPublic={() => api.checkIsPublic(file.path)}
           onSetPublic={(pub) => {
             api.setPublicOrPrivate(file.path, pub)
               .then(() => {

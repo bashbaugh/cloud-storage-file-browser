@@ -72,6 +72,8 @@ exports.manageFiles = async (req, res) => {
   }
 
   try {
+
+    let file
     switch (body.action) {
       /* Action getNewUploadUrl: Generates a signed file POST URL.
        * filepath: Where to upload the file to (in the bucket)
@@ -119,7 +121,9 @@ exports.manageFiles = async (req, res) => {
         return res.json({ url, duration: SHARED_FILE_EXPIRY_DAYS })
       case 'getNewUploadUrl':
         setBucketCors()
+
         const newFile = bucket.file(body.filepath)
+
         const expDate = Date.now() + 60 * 60 * 1000 // Allow 60 minutes for upload
         const options = {
           expires: expDate,
@@ -151,9 +155,15 @@ exports.manageFiles = async (req, res) => {
             return res.status(500).json({ error: 'save-error' })
           })
       case 'deleteFile':
-        const file = bucket.file(body.filepath)
+        file = bucket.file(body.filepath)
         await file.delete()
         return res.json({ deleted: true })
+      case 'getSettings':
+        const userSettings = JSON.parse((await bucket.file('.bucket.dashboard-settings').download())[0].toString('utf8'))
+        return res.json({ settings: userSettings })
+      case 'saveSettings':
+        await bucket.file('.bucket.dashboard-settings').save(JSON.stringify(body.settings))
+        return res.json({ success: true })
       default:
         res.status(400).send(`Couldn't find action`)
     }

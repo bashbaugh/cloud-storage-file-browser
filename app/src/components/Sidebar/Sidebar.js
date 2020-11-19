@@ -2,7 +2,7 @@ import React from 'react'
 import { Header, Icon, Menu, Sidebar, Segment, Image } from 'semantic-ui-react'
 import config from '../../config'
 
-export default ({ profile, openFileUpload, openFolderCreator }) => {
+export default ({ profile, openFileUpload, openFolderCreator, openSettings }) => {
 
   const signOut = () => {
     window.gapi.auth2.getAuthInstance().signOut()
@@ -32,6 +32,10 @@ export default ({ profile, openFileUpload, openFolderCreator }) => {
       <Menu.Item as='a' onClick={openFolderCreator}>
         <Icon name='plus circle' />
         New Folder
+      </Menu.Item>
+      <Menu.Item as='a' onClick={openSettings}>
+        <Icon name='settings' />
+        Options
       </Menu.Item>
       <Menu.Item as='a' onClick={signOut}>
         <Icon name='sign-out' />
