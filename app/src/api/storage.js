@@ -49,6 +49,14 @@ export default {
       filepath
     }, reqConfig(this))
   },
+  moveFile (filepath, destination) {
+    return axios.post('/manage-files', {
+      action: 'moveFile',
+      filepath,
+      destination
+    }, reqConfig(this))
+      .then(res => res.data)
+  },
   getNewUploadPolicy (filepath, fileContentType, fileSize) {
     return axios.post('/manage-files', {
       action: 'getNewUploadUrl',

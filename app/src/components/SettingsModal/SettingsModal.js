@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import {Modal, Button, Checkbox, Icon, Form, Input, Label} from 'semantic-ui-react'
+import {Modal, Button, Checkbox, Icon, Form, Input, Label, Dimmer, Loader} from 'semantic-ui-react'
 import { toast } from 'react-toastify'
 import api from '../../api/storage'
 
@@ -9,8 +9,11 @@ const SettingsModal = ({ open, closeModal }) => {
 
   const [settings, setSettings] = useState({})
 
+  const [notLoaded, setNotLoaded] = useState(true)
+
   useEffect(() => {
     if (!open) return
+    setNotLoaded(true)
     api.getSettings().then(s => {
       // Default settings:
       setSettings(s.useSettings ? s : {
@@ -19,6 +22,7 @@ const SettingsModal = ({ open, closeModal }) => {
         privateUrlExpiration: 7,
         cdnAdmins: ''
       })
+      setNotLoaded(false)
     })
   }, [open])
 
@@ -37,6 +41,10 @@ const SettingsModal = ({ open, closeModal }) => {
       <Modal open={open} onClose={close} size='large' centered={false} dimmer='inverted'>
         <Modal.Header>Options & Settings</Modal.Header>
         <Modal.Content>
+          <Dimmer active={notLoaded} inverted>
+            <Loader size='large'>Loading...</Loader>
+          </Dimmer>
+
           <Modal.Description style={{ marginBottom: '15px'}}>
             Your settings will be saved in a file in your storage bucket.
           </Modal.Description>
@@ -60,7 +68,7 @@ const SettingsModal = ({ open, closeModal }) => {
             </Form.Field>
             <Form.Field>
               <label>CDN Admins</label>
-              <p>Every email you add to this comma-separated list <strong>(no spaces)</strong> will have <strong>full read and write access to the storage bucket</strong> and settings.</p>
+              <p>Every email you add to this comma-separated list <strong>(no spaces)</strong> will have <strong>full read and write access to the storage bucket</strong> and settings. They will be able to sign into this dashboard with their Google account.</p>
               <Input onChange={e => setSettings({...settings, cdnAdmins: e.currentTarget.value})}>
                 <input value={settings.cdnAdmins}/>
               </Input>

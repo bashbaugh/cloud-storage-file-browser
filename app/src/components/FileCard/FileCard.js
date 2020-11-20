@@ -7,8 +7,8 @@ const FileCard = ({ cardType, isFolder, name, size, fileType, lastMod, checkIsPu
 
   if (cardType === 'list') { // File card for list view
     return (
-      <List.Item>
-        <List.Icon name={isFolder ? 'folder' : 'file'} size='large' verticalAlign='middle'/>
+      <List.Item className={isFolder ? 'folder-card' : ''}>
+        <List.Icon name={isFolder ? 'folder' : 'file'} size='large' verticalAlign='middle' />
         <List.Content>
           <List.Header><a href='#' onClick={onClickItem}>{name}</a>
             <Dropdown onClick={async () => setIsPublic(await checkIsPublic())}>
@@ -17,7 +17,7 @@ const FileCard = ({ cardType, isFolder, name, size, fileType, lastMod, checkIsPu
                 <Dropdown.Item icon='download' text='Download' disabled={isFolder} onClick={() => onDownload(isPublic)} />
                 <Dropdown.Divider/>
                 <Dropdown.Item icon={isPublic ? 'lock' : 'unlock'} text={isPublic ? 'Make private' : 'Make public'} disabled={isFolder} onClick={() => {onSetPublic(!isPublic)}}/>
-                <Dropdown.Item icon='edit' text='Rename' onClick={onRename} />
+                <Dropdown.Item icon='edit' text='Rename' disabled={isFolder} onClick={onRename} />
                 <Dropdown.Item icon='trash' text='Delete' onClick={onDelete} />
               </Dropdown.Menu>
             </Dropdown>
@@ -32,14 +32,14 @@ const FileCard = ({ cardType, isFolder, name, size, fileType, lastMod, checkIsPu
     )
   } else { // File card for card view
     return (
-      <Card>
+      <Card className={isFolder ? 'folder-card' : ''}>
         <Card.Content>
           <Card.Header>
             <a href='#' onClick={onClickItem}>{name}</a>
             <Dropdown onClick={async () => setIsPublic(await checkIsPublic())} icon='caret down'>
               <Dropdown.Menu>
                 <Dropdown.Item icon={isPublic ? 'lock' : 'unlock'} text={isPublic ? 'Make private' : 'Make public'} disabled={isFolder} onClick={() => {onSetPublic(!isPublic)}}/>
-                <Dropdown.Item icon='edit' text='Rename' onClick={onRename} />
+                <Dropdown.Item icon='edit' text='Rename' disabled={isFolder} onClick={onRename} />
                 {/*<Dropdown.Item icon='trash' text='Delete' onClick={onDelete} />*/}
               </Dropdown.Menu>
             </Dropdown>
@@ -64,9 +64,6 @@ const FileCard = ({ cardType, isFolder, name, size, fileType, lastMod, checkIsPu
             </Button>
             </>}
 
-            {/*<Button basic compact size='mini' color='blue' onClick={onRename}>*/}
-            {/*  <Icon name='edit outline'/>*/}
-            {/*</Button>*/}
             <Button basic compact size='mini' color='red' onClick={onDelete}>
               <Icon name='trash alternate outline'/>
             </Button>

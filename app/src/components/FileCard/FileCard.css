@@ -9,3 +9,7 @@
 .file-dropdown-link:hover {
     color: #ffaa00;
 }
+
+.folder-card:-moz-drag-over {
+    border: 1px solid black;
+}

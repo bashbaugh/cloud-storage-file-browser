@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import './FileExplorer.css'
-import { Header, Segment, Icon, Breadcrumb, List, Card, Button, Message, Modal } from 'semantic-ui-react'
+import { Header, Segment, Icon, Breadcrumb, List, Card, Button, Message, Modal, Form } from 'semantic-ui-react'
 import { toast } from 'react-toastify'
 import FileCard from '../FileCard/FileCard'
 import { formatBytes, formatDatetime } from '../../util/fileutil'
@@ -24,6 +24,10 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
     file: '',
     isFolder: false
   })
+
+  const [renameModalOpen, setRenameModalOpen] = useState(false)
+  const [fileToRename, setFileToRename] = useState({})
+  const [renameInputValue, setRenameInputValue] = useState('')
 
   const setPath = (p) => { setPathState(p); setExplorerPath(p); }
 
@@ -67,6 +71,20 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
       })
   }
 
+  const renameFile = () => {
+    let newFilePath = fileToRename.path.split('/')
+    newFilePath[fileToRename.path.split('/').length - 1] = renameInputValue
+    api.moveFile(fileToRename.path, newFilePath.join('/'))
+      .then(data => {
+        if (!data.success) return Promise.reject()
+        toast.dark('🚚 File renamed!')
+        setRenameInputValue('')
+        getFiles()
+      })
+      .catch(() => toast.dark(`❗ Couldn't rename file. Make sure a file with the same name doesn't already exist.`))
+    setRenameModalOpen(false)
+  }
+
   const fileCards = () => {
     return filesInPath().map((file) => (
         <FileCard
@@ -83,6 +101,7 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
             if (file.isFolder && filesInPath(file.path.split('/').slice(0, -1)).length) return toast.dark('❌ You must delete all files from this folder first.')
             setDeletionState({...deletionState, open: true, file: file.path, isFolder: file.isFolder})
           }}
+          onRename={() => { setRenameModalOpen(true); setFileToRename(file); setRenameInputValue(file.name);}}
           onClickItem={async () => {
             if (file.isFolder) {
               setPath(file.path.slice(0, -1).split('/')) // Remove ending slash from folder path and split into separate folder names
@@ -203,7 +222,7 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
         )}
       </div>
 
-      {/* Deletion Modal */}
+      {/* Delete Modal */}
       <Modal basic open={deletionState.open} onClose={() => setDeletionState({...deletionState, open: false, error: false, saving: false})}>
         <Header icon>
           <Icon name='delete' />
@@ -220,6 +239,30 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
           </Button>
           <Button color='red' inverted onClick={deleteFile}>
             <Icon name='checkmark' /> { deletionState.saving ? 'Deleting...' : 'Yes' }
+          </Button>
+        </Modal.Actions>
+      </Modal>
+
+      {/*Rename Modal*/}
+      <Modal open={renameModalOpen} onClose={() => setRenameModalOpen(false)} size='mini'>
+        <Header icon>
+          <Icon name='edit' />
+          Rename {fileToRename.name}
+        </Header>
+        <Modal.Content>
+          <Form as='div'>
+            <Form.Field>
+              <input placeholder='New name' value={renameInputValue} onChange={e => setRenameInputValue(e.target.value)}/>
+            </Form.Field>
+          </Form>
+        </Modal.Content>
+        <Modal.Actions>
+          <Button basic color='blue' onClick={() => {setRenameModalOpen(false); setRenameInputValue('');}}>
+            Cancel
+          </Button>
+          <Button color='violet' onClick={renameFile}>
+            <Icon name='checkmark' />
+            Rename
           </Button>
         </Modal.Actions>
       </Modal>

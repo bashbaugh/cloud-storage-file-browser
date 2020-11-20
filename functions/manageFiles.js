@@ -163,9 +163,12 @@ exports.manageFiles = async (req, res) => {
             return res.status(500).json({ error: 'save-error' })
           })
       case 'deleteFile':
-        file = bucket.file(body.filepath)
-        await file.delete()
+        await bucket.file(body.filepath).delete()
         return res.json({ deleted: true })
+      case 'moveFile':
+        if ((await bucket.file(body.destination).exists())[0]) return res.json({ alreadyExists: true, success: false })
+        await bucket.file(body.filepath).move(body.destination)
+        return res.json({ success: true })
       case 'getSettings':
         const userSettings = JSON.parse((await bucket.file('.bucket.dashboard-settings').download())[0].toString('utf8'))
         return res.json({ settings: userSettings })
