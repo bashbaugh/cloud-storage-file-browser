@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import './FileExplorer.css'
-import { Header, Segment, Icon, Breadcrumb, List, Card, Button, Message, Modal, Form } from 'semantic-ui-react'
+import { Header, Segment, Icon, Breadcrumb, List, Card, Button, Message, Modal, Form, Portal } from 'semantic-ui-react'
 import { toast } from 'react-toastify'
 import FileCard from '../FileCard/FileCard'
 import { formatBytes, formatDatetime } from '../../util/fileutil'
@@ -25,9 +25,11 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
     isFolder: false
   })
 
-  const [renameModalOpen, setRenameModalOpen] = useState(false)
   const [fileToRename, setFileToRename] = useState({})
   const [renameInputValue, setRenameInputValue] = useState('')
+
+  const [fileToMove, setFileToMove] = useState({})
+  const [fileMoveDestination, setFileMoveDestination] = useState({})
 
   const setPath = (p) => { setPathState(p); setExplorerPath(p); }
 
@@ -77,12 +79,28 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
     api.moveFile(fileToRename.path, newFilePath.join('/'))
       .then(data => {
         if (!data.success) return Promise.reject()
-        toast.dark('🚚 File renamed!')
+        toast.dark('🖊 File renamed!')
         setRenameInputValue('')
         getFiles()
       })
       .catch(() => toast.dark(`❗ Couldn't rename file. Make sure a file with the same name doesn't already exist.`))
-    setRenameModalOpen(false)
+    setFileToRename({})
+  }
+
+  const moveFile = (moveToParent) => {
+    let newFilePath = fileToMove.path.split('/')
+    if (!moveToParent) newFilePath[fileToMove.path.split('/').length - 1] = fileMoveDestination.name // Add new file parent dir to file path
+    else newFilePath = newFilePath.slice(0, -3) // Find parent dir path of file
+    newFilePath.push(fileToMove.name) // Add the file's name back to path
+    console.log(`Moving ${fileToMove.path} to ${newFilePath.join('/')}`)
+    api.moveFile(fileToMove.path, newFilePath.join('/'))
+      .then(data => {
+        if (!data.success) return Promise.reject()
+        toast.dark('🚚 File moved!')
+        getFiles()
+      })
+      .catch(() => toast.dark(`❗ Couldn't move file. Make sure a file with the same name doesn't already exist in that folder.`))
+    setFileToMove({})
   }
 
   const fileCards = () => {
@@ -96,14 +114,17 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
           name={file.name}
           size={formatBytes(file.size)}
           isPublic={false}
+          isDimmed={!!fileToMove.path && !file.isFolder}
           onDelete={() => {
             // If the folder isn't empty then don't delete (TODO recursive folder deletion)
             if (file.isFolder && filesInPath(file.path.split('/').slice(0, -1)).length) return toast.dark('❌ You must delete all files from this folder first.')
             setDeletionState({...deletionState, open: true, file: file.path, isFolder: file.isFolder})
           }}
-          onRename={() => { setRenameModalOpen(true); setFileToRename(file); setRenameInputValue(file.name);}}
+          onRename={() => { setFileToRename(file); setRenameInputValue(file.name);}}
+          onMove={() => { setFileToMove(file); setFileMoveDestination({}); }}
           onClickItem={async () => {
-            if (file.isFolder) {
+            if (!!fileToMove.path) setFileMoveDestination(file) // The user is selecting a folder to move the file to
+            else if (file.isFolder) {
               setPath(file.path.slice(0, -1).split('/')) // Remove ending slash from folder path and split into separate folder names
             } else {
               if (await api.checkIsPublic(file.path)) {
@@ -244,7 +265,7 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
       </Modal>
 
       {/*Rename Modal*/}
-      <Modal open={renameModalOpen} onClose={() => setRenameModalOpen(false)} size='mini'>
+      <Modal open={!!fileToRename.path} onClose={() => setFileToRename({})} size='mini'>
         <Header icon>
           <Icon name='edit' />
           Rename {fileToRename.name}
@@ -257,7 +278,7 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
           </Form>
         </Modal.Content>
         <Modal.Actions>
-          <Button basic color='blue' onClick={() => {setRenameModalOpen(false); setRenameInputValue('');}}>
+          <Button basic color='blue' onClick={() => { setFileToRename({}); setRenameInputValue('');}}>
             Cancel
           </Button>
           <Button color='violet' onClick={renameFile}>
@@ -266,6 +287,42 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
           </Button>
         </Modal.Actions>
       </Modal>
+
+      {/* File Move Popup*/}
+      <Portal open={!!fileToMove.path} onClose={() => setFileToMove({})} closeOnDocumentClick={false}>
+        <div className='file-move-portal' style={{ position: 'fixed' }}>
+          <Segment className='file-move-portal-segment'>
+
+            <p>{ !fileMoveDestination.name ? `Select the folder you want to move this file into.` :
+              `Move ${fileToMove.name} into ${fileMoveDestination.name}?`}
+            </p>
+
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <Button
+                style={{ display: 'inline-block' }}
+                size='small'
+                content='Cancel'
+                color='purple'
+                onClick={() => setFileToMove({})}
+              />
+              { !fileMoveDestination.path && fileToMove.path && fileToMove.path.length > 1 && <Button
+                style={{ display: 'inline-block' }}
+                size='small'
+                content='Move up to parent'
+                color='blue'
+                onClick={() => moveFile(true)}
+              />}
+              { fileMoveDestination.name && <Button
+                style={{ display: 'inline-block' }}
+                size='small'
+                content='Confirm'
+                color='green'
+                onClick={() => moveFile()}
+              />}
+            </div>
+          </Segment>
+        </div>
+      </Portal>
     </div>
   )
 }
