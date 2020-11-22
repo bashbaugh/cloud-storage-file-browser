@@ -34,18 +34,25 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
   const setPath = (p) => { setPathState(p); setExplorerPath(p); }
 
   const filesInPath = (p = path) => files // Files and folders in current path, excluding full path in names, sorted with folders first.
-    .filter(file => {
+    .map(file => {
       const isFolder = file.name.endsWith('/')
-      const filePath = file.name.split('/')
-      if (isFolder) filePath.pop() // If it's a folder, the last element in path array will be empty
-      if (filePath === p || file.name.includes('.bucket.')) return false // If it's the folder itself or is a hidden file
-      if (!p.length && filePath.length === 1) return true // This is a root file in the root path
-      return !!(filePath.slice(0, -1).toString() === p.toString() && p.length) // If the file is in the right path, return true
+      const splitPath = isFolder ? file.name.slice(0, -1).split('/') : file.name.split('/')
+      return {
+        ...file,
+        isFolder,
+        path: file.name,
+        splitPath,
+        name: splitPath[splitPath.length - 1],
+      }
     })
-    .map(file => ({...file, isFolder: file.name.endsWith('/'), path: file.name, name: file.name.endsWith('/') ?
-        file.name.split('/')[file.name.split('/').length - 2] :
-        file.name.split('/')[file.name.split('/').length - 1]})) // Just include name without path
-    .sort((first, second) => second.isFolder - first.isFolder) // Sort objects so that folders are first
+    .filter(file => {
+      if (file.splitPath === p || file.name.includes('.bucket.')) return false // If it's the folder itself or is a hidden file
+      if (!p.length && file.splitPath.length === 1) return true // This is a root file in the root path
+      return !!(file.splitPath.slice(0, -1).toString() === p.toString() && p.length) // If the file is in the right path, return true
+    })
+    .sort((first, second) => {
+      return second.isFolder - first.isFolder
+    }) // Sort objects so that folders are first
 
   const getFiles = () => {
     setState({...state, loading: true, loadingError: false})
@@ -94,15 +101,15 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
   }
 
   const moveFile = (moveToParent) => {
-    let newFilePath = fileToMove.path.split('/')
-    if (!moveToParent) newFilePath[fileToMove.path.split('/').length - 1] = fileMoveDestination.name // Add new file parent dir to file path
-    else newFilePath = newFilePath.slice(0, -2) // Find parent dir path of file
-    newFilePath.push(fileToMove.name) // Add the file's name back to path
-    console.log(`Moving ${fileToMove.path} to ${newFilePath.join('/')}`)
-    api.moveFile(fileToMove.path, newFilePath.join('/'))
+    let destFolder = fileToMove.splitPath
+    let newFilePath
+    if (!moveToParent) destFolder[fileToMove.splitPath.length - 1] = fileMoveDestination.name // Add new file parent dir to file path
+    else destFolder = destFolder.slice(0, -2) // Find parent dir path of file (2 levels up from file itself)
+    api.moveFile(fileToMove.path, destFolder.concat(fileToMove.name).join('/'))
       .then(data => {
         if (!data.success) return Promise.reject()
         toast.dark('🚚 File moved!')
+        setPath(destFolder)
         getFiles()
       })
       .catch(() => toast.dark(`❗ Couldn't move file. Make sure a file with the same name doesn't already exist in that folder.`))

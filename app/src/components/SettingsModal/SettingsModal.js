@@ -16,11 +16,9 @@ const SettingsModal = ({ open, closeModal }) => {
     setNotLoaded(true)
     api.getSettings().then(s => {
       // Default settings:
-      setSettings(s.useSettings ? s : {
-        useSettings: true,
-        defaultPublicFiles: false,
-        privateUrlExpiration: 7,
-        cdnAdmins: ''
+      setSettings({
+        ...s,
+        useSettings: true // Indicated that these aren't just the default settings
       })
       setNotLoaded(false)
     })

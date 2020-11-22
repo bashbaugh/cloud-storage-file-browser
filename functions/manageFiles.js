@@ -3,15 +3,26 @@ const { OAuth2Client } = require('google-auth-library')
 
 const oauthClient = new OAuth2Client(process.env.OAUTH_CLIENT_ID)
 
+const DEFAULT_SETTINGS = {
+  defaultPublicFiles: false,
+  privateUrlExpiration: 7,
+  cdnAdmins: ''
+}
+
 const storage = new Storage()
 const bucket = storage.bucket(process.env.CDN_BUCKET_NAME)
 const CDN_URL = process.env.CDN_URL || null
 
 let CDN_ADMINS = [process.env.CDN_ADMIN]
-let PRIVATE_URL_EXPIRY_DAYS = 7
+let PRIVATE_URL_EXPIRY_DAYS = DEFAULT_SETTINGS.privateUrlExpiration
+
+async function getUserSettings () {
+  if (!(await bucket.file('.bucket.dashboard-settings').exists())[0]) return DEFAULT_SETTINGS // Settings don't exist, return defaults
+  return JSON.parse((await bucket.file('.bucket.dashboard-settings').download())[0].toString('utf8'))
+}
 
 async function updateWithUserSettings () {
-  const userSettings = JSON.parse((await bucket.file('.bucket.dashboard-settings').download())[0].toString('utf8'))
+  const userSettings = await getUserSettings()
   if (!userSettings.useSettings) return
   PRIVATE_URL_EXPIRY_DAYS = userSettings.privateUrlExpiration
   CDN_ADMINS = [process.env.CDN_ADMIN]
@@ -173,8 +184,7 @@ exports.manageFiles = async (req, res) => {
         else await bucket.file(body.destination).makePrivate()
         return res.json({ success: true })
       case 'getSettings':
-        const userSettings = JSON.parse((await bucket.file('.bucket.dashboard-settings').download())[0].toString('utf8'))
-        return res.json({ settings: userSettings })
+        return res.json({ settings: await getUserSettings() })
       case 'saveSettings':
         await bucket.file('.bucket.dashboard-settings').save(JSON.stringify(body.settings))
         updateWithUserSettings()
