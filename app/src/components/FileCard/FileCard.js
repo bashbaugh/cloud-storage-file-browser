@@ -37,13 +37,15 @@ const FileCard = ({ cardType, isFolder, name, size, fileType, lastMod, isDimmed,
     )
   } else { // File card for card view
     return (
-      <Card className={isFolder ? 'folder-card' : ''}>
+      <>
+      { !isDimmed && <Card className={isFolder ? 'folder-card' : ''}>
         <Card.Content>
           <Card.Header>
             <a href='#' onClick={onClickItem}>{name}</a>
             <Dropdown onClick={async () => setIsPublic(await checkIsPublic())} icon='caret down'>
               <Dropdown.Menu>
                 <Dropdown.Item icon={isPublic ? 'lock' : 'unlock'} text={isPublic ? 'Make private' : 'Make public'} disabled={isFolder} onClick={() => {onSetPublic(!isPublic)}}/>
+                <Dropdown.Item icon='arrow right' text='Move' disabled={isFolder} onClick={onMove} />
                 <Dropdown.Item icon='edit' text='Rename' disabled={isFolder} onClick={onRename} />
                 {/*<Dropdown.Item icon='trash' text='Delete' onClick={onDelete} />*/}
               </Dropdown.Menu>
@@ -74,7 +76,8 @@ const FileCard = ({ cardType, isFolder, name, size, fileType, lastMod, isDimmed,
             </Button>
           </Button.Group>
         </Card.Content>
-      </Card>
+      </Card> }
+      </>
     )
   }
 }

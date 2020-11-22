@@ -2,6 +2,10 @@
     margin: 20px 0;
 }
 
+.explorer-buttons {
+    /*display: flex;*/
+}
+
 .explorer-buttons > *:not(:first-child)  {
     margin-left: 5px !important;
     margin-bottom: 15px;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import './FileExplorer.css'
-import { Header, Segment, Icon, Breadcrumb, List, Card, Button, Message, Modal, Form, Portal } from 'semantic-ui-react'
+import { Header, Segment, Icon, Breadcrumb, List, Card, Button, Message, Modal, Form, Portal, Checkbox } from 'semantic-ui-react'
 import { toast } from 'react-toastify'
 import FileCard from '../FileCard/FileCard'
 import { formatBytes, formatDatetime } from '../../util/fileutil'
@@ -16,6 +16,8 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
   const [path, setPathState] = useState([])
   const [files, setFiles] = useState([]) // All file objects
   const [view, setView] = useState('list')
+
+  const [viewingAllFiles, setViewingAllFiles] = useState(false)
 
   const [deletionState, setDeletionState] = useState({
     open: false,
@@ -33,7 +35,7 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
 
   const setPath = (p) => { setPathState(p); setExplorerPath(p); }
 
-  const filesInPath = (p = path) => files // Files and folders in current path, excluding full path in names, sorted with folders first.
+  const filesInPath = (p = path, allFiles) => files // Files and folders in current path, excluding full path in names, sorted with folders first.
     .map(file => {
       const isFolder = file.name.endsWith('/')
       const splitPath = isFolder ? file.name.slice(0, -1).split('/') : file.name.split('/')
@@ -46,6 +48,7 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
       }
     })
     .filter(file => {
+      if (allFiles) return true // Don't filter if listing every file
       if (file.splitPath === p || file.name.includes('.bucket.')) return false // If it's the folder itself or is a hidden file
       if (!p.length && file.splitPath.length === 1) return true // This is a root file in the root path
       return !!(file.splitPath.slice(0, -1).toString() === p.toString() && p.length) // If the file is in the right path, return true
@@ -117,14 +120,14 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
   }
 
   const fileCards = () => {
-    return filesInPath().map((file) => (
+    return filesInPath(path, viewingAllFiles).map((file) => (
         <FileCard
           key={file.id}
           cardType={view}
           fileType={file.contentType}
           isFolder={file.isFolder}
           lastMod={formatDatetime(file.updated)}
-          name={file.name}
+          name={viewingAllFiles ? file.path : file.name}
           size={formatBytes(file.size)}
           isPublic={false}
           isDimmed={!!fileToMove.path && !file.isFolder}
@@ -138,6 +141,7 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
           onClickItem={async () => {
             if (!!fileToMove.path) setFileMoveDestination(file) // The user is selecting a folder to move the file to
             else if (file.isFolder) {
+              setViewingAllFiles(false)
               setPath(file.path.slice(0, -1).split('/')) // Remove ending slash from folder path and split into separate folder names
             } else {
               if (await api.checkIsPublic(file.path)) {
@@ -208,6 +212,10 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
           <Icon name='refresh' loading={state.refreshing}/>
           Refresh
         </Button>
+        <Button basic color='orange' size='tiny' onClick={() => setViewingAllFiles(!viewingAllFiles)}>
+          <Icon name={viewingAllFiles ? 'checkmark box' : 'square outline'}/>
+          List all files
+        </Button>
         <Button.Group size='tiny'>
           <Button icon basic={view === 'grid'} color='purple' onClick={() => setView('list')}>
             <Icon name='list layout'/>
@@ -223,7 +231,8 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
         <Icon name='folder open outline'/>
         <Breadcrumb.Section link active={!path.length} onClick={() => setPath([])}>{state.bucketName}</Breadcrumb.Section>
         <Breadcrumb.Divider />
-        {
+        { viewingAllFiles && <Breadcrumb.Section>all files and folders</Breadcrumb.Section>}
+        { !viewingAllFiles &&
           path.map((folderName, folderDepth) => (
             <span>
               <Breadcrumb.Section link active={path.length === folderDepth+1} onClick={() => setPath(path.slice(0, folderDepth + 1))}>{folderName}</Breadcrumb.Section>
@@ -244,7 +253,8 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
           </Message.Content>
           </Message>
         }
-        { !filesInPath().length && !state.loading && <p>There are no files here :(</p>}
+        {viewingAllFiles && <Message warning content='Files that contain the text .bucket. may store dashboard settings or other information, so be careful when deleting or renaming them.'/>}
+        { !filesInPath().length && !state.loading && !viewingAllFiles && <p>There are no files here :(</p>}
         { view === 'list' ? (
           <List divided relaxed>
             {fileCards()}

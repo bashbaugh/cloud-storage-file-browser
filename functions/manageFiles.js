@@ -12,13 +12,14 @@ const DEFAULT_SETTINGS = {
 const storage = new Storage()
 const bucket = storage.bucket(process.env.CDN_BUCKET_NAME)
 const CDN_URL = process.env.CDN_URL || null
+const DASHBOARD_ORIGIN = process.env.DASHBOARD_ORIGIN || '*'
 
 let CDN_ADMINS = [process.env.CDN_ADMIN]
 let PRIVATE_URL_EXPIRY_DAYS = DEFAULT_SETTINGS.privateUrlExpiration
 
 async function getUserSettings () {
-  if (!(await bucket.file('.bucket.dashboard-settings').exists())[0]) return DEFAULT_SETTINGS // Settings don't exist, return defaults
-  return JSON.parse((await bucket.file('.bucket.dashboard-settings').download())[0].toString('utf8'))
+  if (!(await bucket.file('.bucket.dashboard-settings.json').exists())[0]) return DEFAULT_SETTINGS // Settings don't exist, return defaults
+  return JSON.parse((await bucket.file('.bucket.dashboard-settings.json').download())[0].toString('utf8'))
 }
 
 async function updateWithUserSettings () {
@@ -43,22 +44,19 @@ function setCors(req, res) {
   }
 }
 
-function setBucketCors() {
-  const corsSetFlag = bucket.file('.bucket.cors-set')
-  corsSetFlag.exists()
-    .then(([exists]) => {
-      if (!exists) {
-        const corsConfig = [{
-          "method": ["*"],
-          "origin": ["*"],
-          "responseHeader": ["*"]
-        }]
-        return bucket.setCorsConfiguration(corsConfig)
-      }
-    })
-    .then(() => {
-      corsSetFlag.save('This is a config file used by the CDN File Manager')
-    })
+let CorsAlreadyChecked = false
+async function setBucketCors() {
+  if (CorsAlreadyChecked) return
+  const corsSetFlag = bucket.file('.bucket.cors-configured')
+  if ((await corsSetFlag.exists())[0]) { CorsAlreadyChecked = true; return }
+  const corsConfig = [{
+    "method": ["*"],
+    "origin": [DASHBOARD_ORIGIN],
+    "responseHeader": ["*"]
+  }]
+  await bucket.setCorsConfiguration(corsConfig)
+  await corsSetFlag.save(`This bucket's CORS has been set to allow request from the file manager`)
+  CorsAlreadyChecked = true
 }
 
 // Post request to manage files, create folders, request upload URLs, etc.
@@ -139,7 +137,7 @@ exports.manageFiles = async (req, res) => {
         })
         return res.json({ url, duration: PRIVATE_URL_EXPIRY_DAYS })
       case 'getNewUploadUrl':
-        setBucketCors()
+        await setBucketCors()
 
         newFile = bucket.file(body.filepath)
 
@@ -186,7 +184,7 @@ exports.manageFiles = async (req, res) => {
       case 'getSettings':
         return res.json({ settings: await getUserSettings() })
       case 'saveSettings':
-        await bucket.file('.bucket.dashboard-settings').save(JSON.stringify(body.settings))
+        await bucket.file('.bucket.dashboard-settings.json').save(JSON.stringify(body.settings))
         updateWithUserSettings()
         return res.json({ success: true })
       default:
