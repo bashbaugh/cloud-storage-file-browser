@@ -81,7 +81,7 @@ exports.manageFiles = async (req, res) => {
 
   try {
 
-    let file
+    let file, newFile
     switch (body.action) {
       /* Action getNewUploadUrl: Generates a signed file POST URL.
        * filepath: Where to upload the file to (in the bucket)
@@ -130,7 +130,7 @@ exports.manageFiles = async (req, res) => {
       case 'getNewUploadUrl':
         setBucketCors()
 
-        const newFile = bucket.file(body.filepath)
+        newFile = bucket.file(body.filepath)
 
         const expDate = Date.now() + 60 * 60 * 1000 // Allow 60 minutes for upload
         const options = {
@@ -167,7 +167,10 @@ exports.manageFiles = async (req, res) => {
         return res.json({ deleted: true })
       case 'moveFile':
         if ((await bucket.file(body.destination).exists())[0]) return res.json({ alreadyExists: true, success: false })
+        const wasPublic = (await bucket.file(body.filepath).isPublic())[0]
         await bucket.file(body.filepath).move(body.destination)
+        if (wasPublic) await bucket.file(body.destination).makePublic()
+        else await bucket.file(body.destination).makePrivate()
         return res.json({ success: true })
       case 'getSettings':
         const userSettings = JSON.parse((await bucket.file('.bucket.dashboard-settings').download())[0].toString('utf8'))

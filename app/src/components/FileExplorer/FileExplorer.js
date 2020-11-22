@@ -34,8 +34,14 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
   const setPath = (p) => { setPathState(p); setExplorerPath(p); }
 
   const filesInPath = (p = path) => files // Files and folders in current path, excluding full path in names, sorted with folders first.
-    // If filename starts with current path, is in root dir, isn't the folder itself, and isn't a hidden config file, then include
-    .filter(file => ((!file.name.slice(0, -1).includes('/') && !p.length) || (file.name.startsWith(p.join('/') + '/') && p.length)) && file.name !== p.join('/') + '/' && !file.name.startsWith('.bucket'))
+    .filter(file => {
+      const isFolder = file.name.endsWith('/')
+      const filePath = file.name.split('/')
+      if (isFolder) filePath.pop() // If it's a folder, the last element in path array will be empty
+      if (filePath === p || file.name.includes('.bucket.')) return false // If it's the folder itself or is a hidden file
+      if (!p.length && filePath.length === 1) return true // This is a root file in the root path
+      return !!(filePath.slice(0, -1).toString() === p.toString() && p.length) // If the file is in the right path, return true
+    })
     .map(file => ({...file, isFolder: file.name.endsWith('/'), path: file.name, name: file.name.endsWith('/') ?
         file.name.split('/')[file.name.split('/').length - 2] :
         file.name.split('/')[file.name.split('/').length - 1]})) // Just include name without path
@@ -90,7 +96,7 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
   const moveFile = (moveToParent) => {
     let newFilePath = fileToMove.path.split('/')
     if (!moveToParent) newFilePath[fileToMove.path.split('/').length - 1] = fileMoveDestination.name // Add new file parent dir to file path
-    else newFilePath = newFilePath.slice(0, -3) // Find parent dir path of file
+    else newFilePath = newFilePath.slice(0, -2) // Find parent dir path of file
     newFilePath.push(fileToMove.name) // Add the file's name back to path
     console.log(`Moving ${fileToMove.path} to ${newFilePath.join('/')}`)
     api.moveFile(fileToMove.path, newFilePath.join('/'))
