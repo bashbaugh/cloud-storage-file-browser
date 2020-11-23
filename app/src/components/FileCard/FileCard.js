@@ -1,14 +1,17 @@
 import React, { useState } from 'react'
 import './FileCard.css'
 import { Card, List, Button, Icon, Dropdown, Checkbox, Dimmer } from 'semantic-ui-react'
+import { getIconByMIMEType } from '../../util/fileutil'
 
 const FileCard = ({ cardType, isFolder, name, size, fileType, lastMod, isDimmed, checkIsPublic, onDelete, onRename, onMove, onClickItem, onDownload, onSetPublic}) => {
   const [isPublic, setIsPublic] = useState(false)
 
+  const fileIcon = getIconByMIMEType(fileType, isFolder)
+
   if (cardType === 'list') { // File card for list view
     return (
       <List.Item className={isFolder ? 'folder-card' : ''}>
-        <List.Icon name={isFolder ? 'folder' : 'file'} size='large' verticalAlign='middle' />
+        <List.Icon name={fileIcon} size='large' verticalAlign='middle' />
         <List.Content>
           <Dimmer.Dimmable dimmed={isDimmed}>
             <Dimmer active={isDimmed} inverted/>
@@ -56,7 +59,7 @@ const FileCard = ({ cardType, isFolder, name, size, fileType, lastMod, isDimmed,
             {isFolder ? 'folder' : ` \u00B7 ${fileType} `}
           </Card.Meta>
           <Card.Description>
-            <Icon name={isFolder ? 'folder' : 'file'}/>
+            <Icon name={fileIcon}/>
             {!isFolder && ` \u00B7 last modified ${lastMod} `}
           </Card.Description>
         </Card.Content>
