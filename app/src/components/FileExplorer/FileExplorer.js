@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import './FileExplorer.css'
 import { Header, Segment, Icon, Breadcrumb, List, Card, Button, Message, Modal, Form, Portal, Checkbox } from 'semantic-ui-react'
 import { toast } from 'react-toastify'
@@ -54,8 +54,8 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
       return !!(file.splitPath.slice(0, -1).toString() === p.toString() && p.length) // If the file is in the right path, return true
     })
     .sort((first, second) => {
-      return second.isFolder - first.isFolder
-    }) // Sort objects so that folders are first
+      return second.isFolder - first.isFolder // Sort objects so that folders are first
+    })
 
   const getFiles = () => {
     setState({...state, loading: true, loadingError: false})

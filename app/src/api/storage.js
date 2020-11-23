@@ -14,9 +14,7 @@ const reqConfig = obj => ({
 export default {
   idToken: null,
   getFiles () {
-    return axios.post('/manage-files', {
-      action: 'getFiles',
-    }, reqConfig(this))
+    return axios.get('/get-files', reqConfig(this))
   },
   checkIsPublic (path) {
     return axios.head(config.BucketUrl + path)
@@ -24,42 +22,36 @@ export default {
       .catch(res => false)
   },
   setPublicOrPrivate (filepath, pub) {
-    return axios.post('/manage-files', {
-      action: pub ? 'setPublic' : 'setPrivate',
+    return axios.post(pub ? '/set-public' : '/set-private', {
       filepath
     }, reqConfig(this))
   },
   getSharableUrl (filepath, download) {
-    return axios.post('/manage-files', {
-      action: 'getShareUrl',
+    return axios.post('/get-share-url', {
       filepath,
       download
     }, reqConfig(this))
       .then(res => res.data)
   },
   addFolder (folderpath) {
-    return axios.post('/manage-files', {
-      action: 'addFolder',
+    return axios.post('/add-folder', {
       folderpath
     }, reqConfig(this))
   },
   deleteFile (filepath) {
-    return axios.post('/manage-files', {
-      action: 'deleteFile',
+    return axios.post('/delete-file', {
       filepath
     }, reqConfig(this))
   },
   moveFile (filepath, destination) {
-    return axios.post('/manage-files', {
-      action: 'moveFile',
+    return axios.post('/move-file', {
       filepath,
       destination
     }, reqConfig(this))
       .then(res => res.data)
   },
   getNewUploadPolicy (filepath, fileContentType, fileSize) {
-    return axios.post('/manage-files', {
-      action: 'getNewUploadUrl',
+    return axios.post('/get-new-upload-policy', {
       filepath,
       fileContentType,
       fileSize,
@@ -77,14 +69,11 @@ export default {
     })
   },
   getSettings () {
-    return axios.post('/manage-files', {
-      action: 'getSettings'
-    }, reqConfig(this))
+    return axios.get('/get-settings', reqConfig(this))
       .then(res => res.data.settings)
   },
   saveSettings (settings) {
-    return axios.post('/manage-files', {
-      action: 'saveSettings',
+    return axios.post('/save-settings', {
       settings
     }, reqConfig(this))
       .then(res => res.data)
