@@ -17,7 +17,7 @@ export default {
     return axios.get('/get-files', reqConfig(this))
   },
   checkIsPublic (path) {
-    return axios.head(config.BucketUrl + path)
+    return axios.head(config.BucketUrl + path + `?bc_timestamp=${new Date().getTime()}`) // Append unused query param to ensure that browser cache is bypassed.
       .then(res => res.status === 200)
       .catch(res => false)
   },

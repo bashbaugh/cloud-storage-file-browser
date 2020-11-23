@@ -1,0 +1,14 @@
+.dropzone {
+}
+
+.fileListName {
+    cursor: pointer;
+}
+
+.fileList {
+    margin: 20px;
+}
+
+.fileInputContainer {
+    margin: 15px 0;
+}

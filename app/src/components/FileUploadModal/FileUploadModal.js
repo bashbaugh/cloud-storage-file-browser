@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createRef } from 'react'
-import './FileUploadModal.css'
-import { Modal, Button, Icon, List, Progress } from 'semantic-ui-react'
+import styles from './FileUploadModal.module.css'
+import { Modal, Button, Icon, List, Progress, Checkbox, Popup } from 'semantic-ui-react'
 import { toast } from 'react-toastify'
 import { formatBytes } from '../../util/fileutil'
 import api from '../../api/storage'
@@ -12,6 +12,8 @@ const FileUploadModal = ({ open, closeModal, path, onSuccess }) => {
   const [progress, setProgress] = useState(0) // Progress percent
   const [uploading, setUploading] = useState(false) // Is the file currently uploading
   const [error, setError] = useState(false) // Has there been an error
+
+  const [folderUpload, setFolderUpload] = useState(false)
 
   const reset = (clearFiles) => {
     setError(false)
@@ -32,7 +34,7 @@ const FileUploadModal = ({ open, closeModal, path, onSuccess }) => {
       reset(false)
       setStatus('Requesting upload policy...')
 
-      api.getNewUploadPolicy(file.name, file.type, file.size)
+      api.getNewUploadPolicy(file.name, file.type, file.size) // Get upload policy with full file destination path.
         .catch((err) => {
           return Promise.reject(`Unable to get upload policy for file ${i+1}`)
         })
@@ -63,13 +65,16 @@ const FileUploadModal = ({ open, closeModal, path, onSuccess }) => {
     }
   }
 
-  const onFileChange = (e) => {
-    setFiles(Array.from(e.target.files))
+  const onFilesChange = (e) => {
+    const originalFiles = Array.from(e.target.files)
+    setFiles(originalFiles.map(file => {
+      return new File([file], (path.length ? path.join('/') + '/' : '') + file.name, { type: file.type })
+    }))
   }
 
   const fileList = files.map(file => (
     <List.Item>
-      <span className="file-list-name">
+      <span className={styles.fileListName}>
         {file.name}
       </span> - {formatBytes(file.size)}
     </List.Item>
@@ -80,10 +85,16 @@ const FileUploadModal = ({ open, closeModal, path, onSuccess }) => {
       <Modal open={open} onClose={() => {reset(true); closeModal();}}>
         <Modal.Header>Upload Files</Modal.Header>
         <Modal.Content>
-          <Modal.Description>
-          </Modal.Description>
-          <input multiple type="file" ref={fileInput} onChange={onFileChange}/>
-          <div className='file-list'>
+          <p>Files will be uploaded to {(path || []).join('/') + '/'}</p>
+
+          <Checkbox toggle label='Enable folder upload' checked={folderUpload} onClick={() => setFolderUpload(!folderUpload)} />
+          {/*<Popup content='' trigger={<Icon name='info circle' />} />*/}
+
+          <div className={styles.fileInputContainer}>
+            <input multiple type="file" webkitdirectory={folderUpload && ''} mozdirectory={folderUpload && ''} ref={fileInput} onChange={onFilesChange}/>
+          </div>
+
+          <div className={styles.fileList}>
             <List>
               {fileList}
             </List>

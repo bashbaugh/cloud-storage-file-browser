@@ -37,12 +37,11 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
 
   const filesInPath = (p = path, ignoreFileStructure ) => files // Files and folders in current path, excluding full path in names, sorted with folders first.
     .map(file => {
-      const isFolder = file.name.endsWith('/')
-      const splitPath = isFolder ? file.name.slice(0, -1).split('/') : file.name.split('/')
+      const isFolder = file.path.endsWith('/')
+      const splitPath = isFolder ? file.path.slice(0, -1).split('/') : file.path.split('/')
       return {
         ...file,
         isFolder,
-        path: file.name,
         splitPath,
         name: splitPath[splitPath.length - 1],
       }
@@ -127,7 +126,6 @@ const FileExplorer = ({ idToken, profile, setExplorerPath, doRefresh, didRefresh
           lastMod={formatDatetime(file.updated)}
           name={ignoringFileStructure ? file.path : file.name}
           size={formatBytes(file.size)}
-          isPublic={false}
           isDimmed={!!fileToMove.path && !file.isFolder}
           onDelete={() => {
             // If the folder isn't empty then don't delete (TODO recursive folder deletion)

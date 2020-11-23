@@ -95,10 +95,10 @@ api.get('/get-files', (req, res, next) => {
         version: file.generation,
         id: file.id,
         downloadLink: file.mediaLink,
-        name: file.name,
+        path: file.name,
         size: file.size,
         updated: file.updated,
-        isPublic: !!(file.acl && file.acl.find(accessControl => accessControl.entity === 'allUsers' && accessControl.role === 'READER')) // File is public if it contains a allUsers read ACL
+        // isPublic: !!(file.acl.find(accessControl => accessControl.entity === 'allUsers' && accessControl.role === 'READER')) // File is public if it contains a allUsers read ACL
       }))
       return res.json({ bucket: bucket.name, files: filesResponse })
     })
