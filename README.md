@@ -1,6 +1,6 @@
 # GCP Storage File Browser
 
-A lightweight file management wrapper for Google Cloud Storage made with React.js and react-semantic-ui. Not better than the  official browser built into the GCP dashboard, but if you just need a simple UI to upload and download files to a storage bucket (perhaps one attached to the GCP CDN or Cloudflare) and don't need complex permissions or retention  then this one loads faster and looks nicer, in my opinion.
+A lightweight file management wrapper for Google Cloud Storage made with React.js and react-semantic-ui. Not better than the  official browser built into the GCP dashboard, but if you just need a simple UI to upload and download files to a storage bucket (perhaps one attached to the GCP CDN or Cloudflare) and don't need complex permissions or retention controls then this one loads faster and looks nicer, in my opinion.
 
 ![file browser](https://s.bweb.app/file-manager-screenshots/browser.png "First version of the file manager")
 
@@ -89,3 +89,8 @@ Then, you can take the compiled `app/build` directory and upload it to whichever
 
 Note that if you want to upload it to a subdirectory (of your CDN for example) you may need to make a few React configuration changes.
     
+---
+
+If you have any questions or run into any problems or need help hosting it, open an issue (or email me at `scitronboy[at]gmail[dot]com`).
+
+Contributions are always welcome!
