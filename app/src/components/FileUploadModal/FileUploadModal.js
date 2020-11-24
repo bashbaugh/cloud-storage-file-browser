@@ -1,78 +1,134 @@
-import React, { useState, useEffect, createRef } from 'react'
+import React, { useState, useReducer, useEffect, createRef } from 'react'
 import styles from './FileUploadModal.module.css'
 import { Modal, Button, Icon, List, Progress, Checkbox, Popup } from 'semantic-ui-react'
 import { toast } from 'react-toastify'
 import { formatBytes } from '../../util/fileutil'
+// import getDroppedOrSelectedFiles from '../../util/upload'
 import api from '../../api/storage'
+import axios from 'axios'
+
+
+let uploadCancelFunc = () => {}
+
+const initialUploadState = {
+  files: [],
+  status: '',
+  progress: 0,
+  totalProgress: 0,
+  totalUploadSize: 0,
+  totalUploadedSize: 0,
+  uploading: false,
+  error: false,
+  folderUpload: false,
+  uploadCancelled: false
+}
+
+function uploadStateReducer (state, action) {
+  switch (action.type) {
+    case 'reset':
+      if (action.betweenSteps) return {...state, status: action.status || '', progress: 0, error: false }
+      else {
+        uploadCancelFunc() // Cancel the current upload request.
+        return {...initialUploadState }
+      }
+    case 'setStatus':
+      return {...state, status: action.status}
+    case 'uploadError':
+      console.error(action.error)
+      return {...state, error: true, uploading: false, progress: 100, status: action.error + ' (preceding files successfully uploaded)'}
+    case 'setUploading':
+      return {...state, uploading: action.uploading}
+    case 'setProgress':
+      return {...state, progress: Math.round(action.rawProgress * 100 * 10) / 10}
+    case 'addUploadedAmount':
+      const totalUploadedSize = state.totalUploadedSize + action.amount
+      return {...state,
+        totalUploadedSize,
+        totalProgress: totalUploadedSize / state.totalUploadSize * 100
+      }
+    case 'setFiles':
+      let size = 0
+      for (const file of action.files) size += file.size || 0 // Count the total size of all the files
+      return {...state, files: action.files || [], totalUploadSize: size}
+    case 'switchFolderUpload':
+      return {...state, folderUpload: !state.folderUpload}
+  }
+}
 
 const FileUploadModal = ({ open, closeModal, path, onSuccess }) => {
   const fileInput = createRef()
-  const [files, setFiles] = useState([])
-  const [status, setStatus] = useState('') // Progress status
-  const [progress, setProgress] = useState(0) // Progress percent
-  const [uploading, setUploading] = useState(false) // Is the file currently uploading
-  const [error, setError] = useState(false) // Has there been an error
 
-  const [folderUpload, setFolderUpload] = useState(false)
-
-  const reset = (clearFiles) => {
-    setError(false)
-    setUploading(false)
-    setProgress(0)
-    setStatus('')
-    if (!clearFiles) return
-    if (fileInput.current) fileInput.current.value = null
-    setFiles([])
-  }
+  const [state, dispatch] = useReducer(uploadStateReducer, initialUploadState)
 
   const startUpload = async () => {
     const shouldBePublic = (await api.getSettings()).defaultPublicFiles
 
-    let failed = false
-    for (const [i, file] of files.entries()) {
-      if (failed) break
-      reset(false)
-      setStatus('Requesting upload policy...')
+    const handleStepFail = (err, message) => {
+      console.error(err)
+      // Return a rejection so that the catch block is called
+      return Promise.reject(message)
+    }
 
-      api.getNewUploadPolicy(file.name, file.type, file.size) // Get upload policy with full file destination path.
-        .catch((err) => {
-          return Promise.reject(`Unable to get upload policy for file ${i+1}`)
+    for (const [i, file] of state.files.entries()) {
+      try {
+        dispatch({ type: 'reset', betweenSteps: true, status: 'Requesting upload policy...' })
+        const uploadPolicy = await api.getNewUploadPolicy(file.name, file.type, file.size) // Get upload policy for full file destination path.
+          .catch(err => handleStepFail(err, `Unable to get upload policy for file ${i+1}`))
+
+        dispatch({ type: 'setUploading', uploading: true })
+        dispatch({ type: 'setStatus', status: `Uploading file ${i + 1} of ${state.files.length}...` })
+
+        const [uploadPromise, cancelFunc] = api.postFile(uploadPolicy, file, (p) => dispatch({ type: 'setProgress', rawProgress: p })) // Post file and set progress callback
+        uploadCancelFunc = cancelFunc
+        let doBreak = false
+        await uploadPromise.catch(err => {
+          // If the error was an intentional axios cancel, don't handle it and instead exit the loop
+          if (axios.isCancel(err)) doBreak = true
+          handleStepFail(err, `Unable to upload file ${i+1}`)
         })
-        .then((res) => {
-          setUploading(true)
-          setStatus(`Uploading file ${i + 1} of ${files.length}...`)
-          return api.postFile(res.data, file, (p) => setProgress(Math.round(p * 100 * 10) / 10)) // Post file and set progress callback
-            .then(() => api.setPublicOrPrivate(file.name, shouldBePublic))
-            .catch((err) => Promise.reject(`Unable to upload file ${i+1}`))
-        })
-        .then((res) => {
-          if (i + 1 === files.length) {
-            setProgress(100)
-            setStatus(`All files successfully uploaded.`)
-            toast.dark("🚀 All files uploaded!")
-            reset(true)
-            onSuccess()
-          }
-        })
-        .catch((err) => { // Handle any error that occurred
-          setError(true)
-          setUploading(false)
-          setProgress(100)
-          console.error(err)
-          setStatus(err + ' (preceding files successfully uploaded)')
-          failed = true
-        })
+        if (doBreak) break
+
+        dispatch({ type: 'addUploadedAmount', amount: file.size || 0}) // File was successfully uploaded, add its size to the counter.
+
+        dispatch({ type: 'setStatus', status: `Setting file ${shouldBePublic ? 'public' : 'private'}...` })
+        await api.setPublicOrPrivate(file.name, shouldBePublic)
+          .catch(err => handleStepFail(err, `Unable to make file ${i+1} ${shouldBePublic ? 'public' : 'private'}`))
+
+        if (i === state.files.length - 1) { // If that was the last file
+          toast.dark("🚀 All files uploaded!")
+          dispatch({ type: 'reset' })
+          setTimeout(onSuccess, 1000) // Wait one second before closing modal and refreshing explorer
+        }
+      } catch (errorMessage) {
+        dispatch({ type: 'uploadError', error: errorMessage })
+        break
+      }
     }
   }
 
-  const onFilesChange = (e) => {
-    const originalFiles = Array.from(e.target.files)
-    setFiles(originalFiles.map(file => {
-      return new File([file], (path.length ? path.join('/') + '/' : '') + file.name, { type: file.type })
-    }))
+  const onFilesChange = (event) => {
+    const parentPath = path.length ? path.join('/') + '/' : '' // Folder to upload files to
+    let fileArray = Array.from(event.target.files).map(file => {
+      const fileName = parentPath + (state.folderUpload ? file.webkitRelativePath : file.name) // The absolute destination path of file. webkitRelativePath is the relative path of the file on the user's FS.
+      const newFile = new File([file], fileName, { type: file.type })
+      return newFile
+    })
+    if (state.folderUpload) {
+      // If it's a folder upload we also have to generate files for each folder so that they show up in the file manager
+      let folderPaths = []
+      for (const file of fileArray) {
+        const fileParentFolder = file.name.split('/').slice(0, -1).join('/') + '/'
+        console.log(fileParentFolder)
+        if (!folderPaths.includes(fileParentFolder)) folderPaths.push(fileParentFolder)
+      }
+      folderPaths = folderPaths.map(folderName => new File([''], folderName))
+      fileArray = fileArray.concat(folderPaths)
+      console.log(fileArray)
+    }
+    dispatch({ type: 'setFiles', files: fileArray })
   }
 
-  const fileList = files.map(file => (
+  const fileList = state.files.map(file => (
     <List.Item>
       <span className={styles.fileListName}>
         {file.name}
@@ -82,16 +138,30 @@ const FileUploadModal = ({ open, closeModal, path, onSuccess }) => {
 
   return (
     <div>
-      <Modal open={open} onClose={() => {reset(true); closeModal();}}>
+      <Modal open={open}>
         <Modal.Header>Upload Files</Modal.Header>
         <Modal.Content>
-          <p>Files will be uploaded to {(path || []).join('/') + '/'}</p>
+          <p>You can select multiple files or a single folder to upload. If you upload a folder, file structure will be preserved. Files will be uploaded to {(path || []).join('/') + '/'}.</p>
 
-          <Checkbox toggle label='Enable folder upload' checked={folderUpload} onClick={() => setFolderUpload(!folderUpload)} />
+          <Checkbox toggle label='Upload a folder' checked={state.folderUpload} onClick={() => dispatch({ type: 'switchFolderUpload' })} />
           {/*<Popup content='' trigger={<Icon name='info circle' />} />*/}
 
           <div className={styles.fileInputContainer}>
-            <input multiple type="file" webkitdirectory={folderUpload && ''} mozdirectory={folderUpload && ''} ref={fileInput} onChange={onFilesChange}/>
+            <input
+              style={{ display: 'none' }}
+              multiple
+              type='file'
+              webkitdirectory={state.folderUpload ? '' : undefined} // Seems redundant, but needed for some reason
+              mozdirectory={state.folderUpload ? '' : undefined}
+              msdirectory={state.folderUpload ? '' : undefined}
+              odirectory={state.folderUpload ? '' : undefined}
+              directory={state.folderUpload ? '' : undefined}
+              ref={fileInput}
+              onChange={onFilesChange}
+            />
+            <Button color='blue' size='huge' style={{ display: 'block', margin: '15px auto'}}  onClick={() => fileInput.current.click()} disabled={state.uploading}>
+              Select { state.folderUpload ? 'a Folder' : 'Files'}
+            </Button>
           </div>
 
           <div className={styles.fileList}>
@@ -99,16 +169,17 @@ const FileUploadModal = ({ open, closeModal, path, onSuccess }) => {
               {fileList}
             </List>
           </div>
-          <p style={{textAlign: 'right', marginRight: '30px', color: error ? 'red' : 'black'}}><strong>{status}</strong></p>
-          {status && <Progress percent={progress} color='teal' progress active={uploading} error={error} />}
+          <p style={{textAlign: 'right', marginRight: '30px', color: state.error ? 'red' : 'black'}}><strong>{state.status}</strong></p>
+          {state.status && <Progress percent={state.progress} color='teal' progress active={state.uploading} error={state.error} />}
+          {state.status && state.uploading && <Progress percent={state.totalProgress} color='violet'/>}
         </Modal.Content>
         <Modal.Actions>
-          <Button color='black' onClick={() => {reset(true); closeModal();}}>
+          <Button color='black' onClick={() => { dispatch({ type: 'reset' }); closeModal();}}>
             Cancel
           </Button>
-          <Button color='orange' onClick={startUpload} disabled={!files.length || uploading}>
+          <Button color='orange' onClick={startUpload} disabled={!state.files.length || state.uploading}>
             <Icon name='upload'/>
-            { uploading ? 'Uploading...' : 'Start Upload' }
+            { state.uploading ? 'Uploading...' : 'Start Upload' }
           </Button>
         </Modal.Actions>
       </Modal>

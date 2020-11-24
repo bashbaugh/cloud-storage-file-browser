@@ -56,6 +56,7 @@ export default {
       fileContentType,
       fileSize,
     }, reqConfig(this))
+      .then(res => res.data)
   },
   postFile (uploadPolicy, file, progressCb) {
     const data = new FormData()
@@ -64,9 +65,14 @@ export default {
     }
     data.append('file', file) // Add the file to the formdata
 
-    return axiosLib.post(uploadPolicy.url, data, { // Use the axiosLib because it's a different API baseURL
-      onUploadProgress: (p) => progressCb(p.loaded / p.total)
+    const cancelTokenSource = axiosLib.CancelToken.source()
+
+    const uploadPromise = axiosLib.post(uploadPolicy.url, data, { // Use the axiosLib because it's a different API baseURL
+      onUploadProgress: (p) => progressCb(p.loaded / p.total),
+      cancelToken: cancelTokenSource.token
     })
+
+    return [uploadPromise, () => cancelTokenSource.cancel()]
   },
   getSettings () {
     return axios.get('/get-settings', reqConfig(this))
