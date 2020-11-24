@@ -83,8 +83,11 @@ const FileUploadModal = ({ open, closeModal, path, onSuccess }) => {
         let doBreak = false
         await uploadPromise.catch(err => {
           // If the error was an intentional axios cancel, don't handle it and instead exit the loop
-          if (axios.isCancel(err)) doBreak = true
-          handleStepFail(err, `Unable to upload file ${i+1}`)
+          if (axios.isCancel(err)) {
+            doBreak = true
+            return
+          }
+          return handleStepFail(err, `Unable to upload file ${i+1}`)
         })
         if (doBreak) break
 

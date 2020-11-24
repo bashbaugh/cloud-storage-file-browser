@@ -129,6 +129,8 @@ api.post('/get-share-url', async (req, res, next) => {
 })
 
 api.post('/get-new-upload-policy', async (req, res, next) => {
+  await setBucketCors() // Make sure bucket cors policy is set to allow access from file manager
+
   const newFile = bucket.file(req.body.filepath)
 
   const expDate = Date.now() + 60 * 60 * 1000 // Allow 60 minutes for upload
