@@ -16,6 +16,13 @@ A lightweight file management wrapper for Google Cloud Storage made with React.j
 + Easily switch files between public and private mode
 + List and card view
 
+#### Critical Missing Features
+
++ Deleting multiple files at once
++ Deleting folders
++ Downloading folders
++ Moving multiple files/folders
+
 ## Installation
 
 
